@@ -100,7 +100,6 @@ const initialInvoiceState: Omit<
 export const useInvoiceStore = create<InvoiceState>()((set, get) => ({
   ...initialInvoiceState,
 
-
   fetchTableData: async () => {
     set({ loading: true, error: null });
     try {
@@ -159,8 +158,6 @@ GROUP BY
 ORDER BY invoices.id DESC;
 
       `);
-
-   
 
       if (invoices && invoices.length > 0) {
         set({
@@ -241,8 +238,6 @@ ORDER BY invoices.id DESC;
     });
   },
 
-
-
   // Export to CSV
   downloadCSV: async () => {
     const { data } = get();
@@ -276,69 +271,111 @@ ORDER BY invoices.id DESC;
   },
 
   // Export to PDF
+  // downloadPDF: async () => {
+  //   const { filteredData } = get();
+  //   try {
+  //     // Dynamically import jsPDF (tree-shaking)
+  //     const jsPDF = (await import("jspdf")).default;
+  //     await import("jspdf-autotable");
+
+  //     const doc = new jsPDF();
+  //     doc.text("Invoices", 14, 10);
+
+  //     // Prepare data for PDF
+  //     const headers = [
+  //       "Invoice No.",
+  //       "Type",
+  //       "Date",
+  //       "Person",
+  //       "Discount",
+  //       "Tax",
+  //       "Received",
+  //       "User",
+  //     ];
+
+  //     const rows = filteredData.map((invoice) => [
+  //       invoice.invoice_no,
+  //       invoice.type,
+  //       invoice.date,
+  //       invoice.person,
+  //       invoice.discount_amount.toFixed(2),
+  //       invoice.tax_amount.toFixed(2),
+  //       invoice.received,
+  //       invoice.user,
+  //     ]);
+
+  //     // @ts-ignore - autotable is added to jsPDF
+  //     doc.autoTable({
+  //       head: [headers],
+  //       body: rows,
+  //       startY: 20,
+  //       theme: "striped",
+  //       styles: {
+  //         fontSize: 10,
+  //         cellPadding: { top: 4, right: 4, bottom: 4, left: 4 },
+  //         valign: "middle",
+  //         halign: "left",
+  //       },
+  //       headStyles: {
+  //         fillColor: [229, 231, 235],
+  //         textColor: 33,
+  //         fontStyle: "bold",
+  //       },
+  //       alternateRowStyles: {
+  //         fillColor: [248, 250, 252],
+  //       },
+  //       tableLineColor: 200,
+  //       tableLineWidth: 0.1,
+  //       margin: { top: 20, left: 14, right: 14 },
+  //     });
+
+  //     doc.save("invoices.pdf");
+  //   } catch (error) {
+  //     console.error("Error generating PDF:", error);
+  //     throw error;
+  //   }
+  // },
   downloadPDF: async () => {
-    const { filteredData } = get();
-    try {
-      // Dynamically import jsPDF (tree-shaking)
-      const jsPDF = (await import("jspdf")).default;
-      await import("jspdf-autotable");
+    
+    const jsPDF = (await import("jspdf")).default;
+    const { autoTable } = await import("jspdf-autotable");
 
-      const doc = new jsPDF();
-      doc.text("Invoices", 14, 10);
+    const doc = new jsPDF();
+    doc.text("Invoices", 14, 10);
 
-      // Prepare data for PDF
-      const headers = [
-        "Invoice No.",
-        "Type",
-        "Date",
-        "Person",
-        "Discount",
-        "Tax",
-        "Received",
-        "User",
-      ];
+    autoTable(doc, {
+      head: [
+        [
+          "Sr. #",
+          "Invoice No.",
+          "Type",
+          "Date",
+          "Person",
+          "Discount",
+          "Tax",
+          "Received",
+          "User",
+          "Subtotal",
+          "Total",
+        ],
+      ],
+      body: get().data.map((item, index) => [
+        String(index + 1),
+        item.invoice_no ?? "",
+        item.type ?? "",
+        item.date ?? "",
+        item.person ?? "",
+        item.discount ?? 0,
+        item.tax ?? 0,
+        item.received ?? "",
+        item.user ?? "",
+        item.subtotal ?? 0,
+        item.total ?? 0,
+      ]),
+      startY: 20,
+    });
 
-      const rows = filteredData.map((invoice) => [
-        invoice.invoice_no,
-        invoice.type,
-        invoice.date,
-        invoice.person,
-        invoice.discount_amount.toFixed(2),
-        invoice.tax_amount.toFixed(2),
-        invoice.received,
-        invoice.user,
-      ]);
-
-      // @ts-ignore - autotable is added to jsPDF
-      doc.autoTable({
-        head: [headers],
-        body: rows,
-        startY: 20,
-        theme: "striped",
-        styles: {
-          fontSize: 10,
-          cellPadding: { top: 4, right: 4, bottom: 4, left: 4 },
-          valign: "middle",
-          halign: "left",
-        },
-        headStyles: {
-          fillColor: [229, 231, 235],
-          textColor: 33,
-          fontStyle: "bold",
-        },
-        alternateRowStyles: {
-          fillColor: [248, 250, 252],
-        },
-        tableLineColor: 200,
-        tableLineWidth: 0.1,
-        margin: { top: 20, left: 14, right: 14 },
-      });
-
-      doc.save("invoices.pdf");
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      throw error;
-    }
+    doc.save("invoices.pdf");
   },
 
   // Delete invoice

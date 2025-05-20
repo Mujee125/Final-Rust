@@ -58,7 +58,7 @@ pub fn run() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         role TEXT NOT NULL,
-        contact TEXT NOT NULL,
+        contact TEXT NOT NULL UNIQUE,
         account TEXT,
         address TEXT NOT NULL,
         remarks TEXT,
@@ -85,7 +85,8 @@ pub fn run() {
     CREATE TABLE IF NOT EXISTS stock (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        code TEXT NOT NULL,
+        code TEXT NOT NULL UNIQUE,
+        type TEXT NOT NULL,
         category TEXT NOT NULL,
         unit TEXT NOT NULL,
         qty INTEGER NOT NULL,
@@ -127,6 +128,7 @@ pub fn run() {
         image TEXT,
         status INTEGER,
         person_id INTEGER,
+        first_login BOOLEAN DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );

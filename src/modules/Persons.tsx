@@ -14,6 +14,7 @@ import ExtendableDropdown from "../components/ExtendableDropdown";
 import { useCartStore } from "../stores/cartStore";
 import { useLocation } from "wouter";
 import { FaBox, FaUsers } from "react-icons/fa6";
+import CSVUploader from "../components/CSVUploader";
 
 const Persons: React.FC = () => {
   const {
@@ -24,6 +25,7 @@ const Persons: React.FC = () => {
  
     searchQuery,
     fetchPersons,
+  handleParsedData,
    
     addPerson,
     updatePerson,
@@ -76,21 +78,7 @@ const Persons: React.FC = () => {
           <h2 className="text-xl font-semibold text-gray-800 flex items-center">
             <FaUsers className=" highlight mr-2 w-[25px] h-[20px]" />
             Persons List
-            {/* Import CSV Button */}
-            <button
-              onClick={openFileInput}
-              className="buttons bg-yellow-400 hover:bg-yellow-500 text-sm ml-4 flex items-center"
-            >
-              <FaDownload className="mr-1" /> Import CSV
-            </button>
-            <input
-              title="Upload CSV"
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              accept=".csv"
-              style={{ display: "none" }}
-            />
+            <CSVUploader onFileParsed={handleParsedData} />
           </h2>
 
           {/* Search Bar */}

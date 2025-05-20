@@ -28,11 +28,11 @@ interface PersonsStore {
   loading: boolean;
   error: string | null;
   searchQuery: string;
-  
+
   // Actions
   fetchPersons: () => Promise<void>;
   fetchInvoicesByPersonId: (personId: number) => Promise<void>;
-  addPerson: (person: Omit<Person, 'id' | 'invoices_no'>) => Promise<void>;
+  addPerson: (person: Omit<Person, "id" | "invoices_no">) => Promise<void>;
   updatePerson: (person: Person) => Promise<void>;
   deletePerson: (id: number) => Promise<void>;
   setCurrentPerson: (person: Partial<Person>) => void;
@@ -41,6 +41,7 @@ interface PersonsStore {
   filterPersons: () => void;
   downloadCSV: () => void;
   downloadPDF: () => void;
+  handleParsedData: (rows: Person[]) => Promise<void>;
 }
 
 export const usePersonsStore = create<PersonsStore>((set, get) => {
@@ -54,17 +55,17 @@ export const usePersonsStore = create<PersonsStore>((set, get) => {
     filteredPersons: [],
     invoices: [],
     currentPerson: {
-      name: '',
-      role: '',
-      contact: '',
-      address: '',
-      remarks: '',
-      account: '',
-      invoices_no: 0
+      name: "",
+      role: "",
+      contact: "",
+      address: "",
+      remarks: "",
+      account: "",
+      invoices_no: 0,
     },
     loading: false,
     error: null,
-    searchQuery: '',
+    searchQuery: "",
 
     fetchPersons: async () => {
       set({ loading: true, error: null });
@@ -118,13 +119,20 @@ export const usePersonsStore = create<PersonsStore>((set, get) => {
         const db = await getDb();
         const result = await db.execute(
           `INSERT INTO persons (name, role, contact, address, remarks, account) 
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          [person.name, person.role, person.contact, person.address, person.remarks, person.account]
+          //  VALUES (?, ?, ?, ?, ?, ?)`,
+          [
+            person.name,
+            person.role,
+            person.contact,
+            person.address,
+            person.remarks,
+            person.account,
+          ]
         );
-        
+
         if (result.rowsAffected > 0) {
-            get().fetchPersons();
-            get().clearCurrentPerson();
+          get().fetchPersons();
+          get().clearCurrentPerson();
         }
       } catch (error) {
         console.error("Error adding person:", error);
@@ -139,12 +147,20 @@ export const usePersonsStore = create<PersonsStore>((set, get) => {
           `UPDATE persons 
            SET name = ?, role = ?, contact = ?, address = ?, remarks = ?, account = ?
            WHERE id = ?`,
-          [person.name, person.role, person.contact, person.address, person.remarks, person.account, person.id]
+          [
+            person.name,
+            person.role,
+            person.contact,
+            person.address,
+            person.remarks,
+            person.account,
+            person.id,
+          ]
         );
-        
+
         if (result.rowsAffected > 0) {
-            get().fetchPersons();
-            get().clearCurrentPerson();
+          get().fetchPersons();
+          get().clearCurrentPerson();
         }
       } catch (error) {
         console.error("Error updating person:", error);
@@ -153,15 +169,14 @@ export const usePersonsStore = create<PersonsStore>((set, get) => {
     },
 
     deletePerson: async (id) => {
-      if (!confirm('Are you sure you want to delete this person?')) return;
-      
+      if (!confirm("Are you sure you want to delete this person?")) return;
+
       try {
         const db = await getDb();
-        const result = await db.execute(
-          `DELETE FROM persons WHERE id = ?`,
-          [id]
-        );
-        
+        const result = await db.execute(`DELETE FROM persons WHERE id = ?`, [
+          id,
+        ]);
+
         if (result.rowsAffected > 0) {
           get().fetchPersons();
           get().clearCurrentPerson();
@@ -181,17 +196,17 @@ export const usePersonsStore = create<PersonsStore>((set, get) => {
     },
 
     clearCurrentPerson: () => {
-      set({ 
+      set({
         currentPerson: {
-          name: '',
-          role: '',
-          contact: '',
-          address: '',
-          remarks: '',
-          account: '',
-          invoices_no: 0
+          name: "",
+          role: "",
+          contact: "",
+          address: "",
+          remarks: "",
+          account: "",
+          invoices_no: 0,
         },
-        invoices: [] 
+        invoices: [],
       });
     },
 
@@ -206,58 +221,127 @@ export const usePersonsStore = create<PersonsStore>((set, get) => {
         set({ filteredPersons: persons });
         return;
       }
-      
+
       const query = searchQuery.toLowerCase();
-      const filtered = persons.filter(person =>
-        Object.values(person).some(value => 
+      const filtered = persons.filter((person) =>
+        Object.values(person).some((value) =>
           String(value).toLowerCase().includes(query)
         )
       );
       set({ filteredPersons: filtered });
     },
 
+    handleParsedData: async (rows: Person[]) => {
+      try {
+        const db = await getDb();
+
+        for (const row of rows) {
+          const cleaned = {
+            name: row.name?.trim() || "",
+            role: row.role?.trim() || "",
+            contact: row.contact?.trim() || "",
+            address: row.address?.trim() || "",
+            remarks: row.remarks?.trim() || "",
+            account: row.account?.trim() || "",
+          };
+
+          // Basic validation: name, role, and contact must be present
+          if (!cleaned.name || !cleaned.role || !cleaned.contact) continue;
+
+          try {
+            const result = await db.execute(
+              `INSERT INTO persons 
+                (name, role, contact,account, address, remarks, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?,?, datetime('now'), datetime('now'))
+               ON CONFLICT(contact) DO UPDATE SET 
+                 name = excluded.name, 
+                 role = excluded.role,
+                   account = excluded.account, 
+                 address = excluded.address, 
+                 remarks = excluded.remarks,
+                 updated_at = datetime('now')`,
+              [
+                cleaned.name,
+                cleaned.role,
+                cleaned.contact,
+                cleaned.account,
+                cleaned.address,
+                cleaned.remarks,
+              ]
+            );
+            console.log("trigger from personStore");
+            if (result.rowsAffected > 0) {
+              get().fetchPersons();
+              get().clearCurrentPerson();
+            }
+          } catch (rowError) {
+            console.error("Error inserting row:", cleaned.contact, rowError);
+          }
+        }
+
+        alert("Person data imported successfully!");
+      } catch (error) {
+        console.error("Error during person data import:", error);
+        alert("An error occurred while importing person data.");
+      }
+    },
+
     downloadCSV: () => {
       const { filteredPersons } = get();
-      const headers = ['Name', 'Contact', 'Role', 'Address', 'Remarks', 'Invoices'];
-      const csvRows = [
-        headers.join(','),
-        ...filteredPersons.map(person => 
-          [person.name, person.contact, person.role, person.address, person.remarks, person.invoices_no]
-            .map(field => `"${field?.toString().replace(/"/g, '""')}"`)
-            .join(',')
-        )
+      const headers = [
+        "Name",
+        "Contact",
+        "Role",
+        "Address",
+        "Remarks",
+        "Invoices",
       ];
-      
-      const csvContent = csvRows.join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const csvRows = [
+        headers.join(","),
+        ...filteredPersons.map((person) =>
+          [
+            person.name,
+            person.contact,
+            person.role,
+            person.address,
+            person.remarks,
+            person.invoices_no,
+          ]
+            .map((field) => `"${field?.toString().replace(/"/g, '""')}"`)
+            .join(",")
+        ),
+      ];
+
+      const csvContent = csvRows.join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = 'persons.csv';
+      link.download = "persons.csv";
       link.click();
     },
 
     downloadPDF: async () => {
-      const jsPDF = (await import('jspdf')).default;
-      const { autoTable } = await import('jspdf-autotable');
-      
+      const jsPDF = (await import("jspdf")).default;
+      const { autoTable } = await import("jspdf-autotable");
+
       const doc = new jsPDF();
       doc.text("Persons List", 14, 10);
-      
+
       autoTable(doc, {
-        head: [['Name', 'Contact', 'Role', 'Address', 'Remarks', 'Invoices']],
-        body: get().filteredPersons.map(person => [
+        head: [["Name", "Contact", "Role", "Address", "Remarks", "Invoices"]],
+        body: get().filteredPersons.map((person) => [
           person.name,
           person.contact,
           person.role,
           person.address,
           person.remarks,
-          person.invoices_no
+          person.invoices_no,
         ]),
-        startY: 20
+        startY: 20,
       });
-      
-      doc.save('persons.pdf');
-    }
+
+      doc.save("persons.pdf");
+    },
   };
 });

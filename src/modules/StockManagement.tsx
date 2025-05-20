@@ -1,4 +1,4 @@
-
+import  Database  from "@tauri-apps/plugin-sql";
 
 import React, { useEffect, useRef } from "react";
 import { useStockStore } from "../stores/stockStore";
@@ -17,14 +17,14 @@ import {
 } from "react-icons/fa";
 import ExtendableDropdown from "../components/ExtendableDropdown";
 import { FaBoxesStacked, FaCalculator } from "react-icons/fa6";
+import CSVUploader from "../components/CSVUploader";
 
 const StockManagement: React.FC = () => {
   const {
-  
     filteredStockItems,
     currentItem,
     stats,
-  
+
     searchQuery,
     pPurchasePrice,
     pSalePrice,
@@ -46,6 +46,7 @@ const StockManagement: React.FC = () => {
     setPSalePrice,
     setPurchaseFactor,
     setSaleFactor,
+    handleParsedData,
   } = useStockStore();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -55,12 +56,120 @@ const StockManagement: React.FC = () => {
     fetchStats();
   }, []);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      // Handle CSV import here
-      console.log("File selected:", e.target.files[0]);
-      // Implement CSV import logic
-    }
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    const timestamp = new Date().toISOString(); // Single timestamp for all operations
+
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      if (!text) return;
+
+      const lines = text
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+      if (lines.length < 2) {
+        alert("CSV file must contain a header and at least one row.");
+        return;
+      }
+
+      const header = lines[0].split(",").map((h) => h.trim());
+      const expectedColumns = 14;
+      if (header.length < expectedColumns) {
+        alert("CSV format is incorrect. At least 14 columns expected.");
+        return;
+      }
+
+      const db = await Database.load("sqlite:learn_pos.db");
+      let rowCount = 0;
+      let errorCount = 0;
+
+      for (let i = 1; i < lines.length; i++) {
+        const row = lines[i].split(",").map((cell) => cell.trim());
+
+        if (row.length < expectedColumns) {
+          errorCount++;
+          continue;
+        }
+
+        const [
+          name,
+          code,
+          category,
+          unit,
+          qtyStr,
+          minQtyStr,
+          targetQtyStr,
+          salePriceStr,
+          purchasePriceStr,
+          discountStr,
+          expiry,
+          location,
+          remarks,
+          // Note: Removed 'type' from destructuring as it's not in your target query
+        ] = row;
+
+        if (!name || !code) {
+          errorCount++;
+          continue;
+        }
+
+        // Convert types
+        const qty = Number(qtyStr) || 0;
+        const min_qty = Number(minQtyStr) || 0;
+        const target_qty = Number(targetQtyStr) || 0;
+        const sale_price = Number(salePriceStr) || 0.0;
+        const purchase_price = Number(purchasePriceStr) || 0.0;
+        const discount = Number(discountStr) || 0.0;
+
+        // Expiry date validation (YYYY-MM-DD)
+        const expiryValid = !expiry || /^\d{4}-\d{2}-\d{2}$/.test(expiry);
+        if (!expiryValid) {
+          errorCount++;
+          continue;
+        }
+
+        try {
+          await db.execute(
+            `INSERT INTO stock (
+              name, code, category, unit, qty, min_qty, target_qty,
+              sale_price, purchase_price, discount, expiry, location, remarks,
+              created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              name,
+              code,
+              category,
+              unit,
+              qty,
+              min_qty,
+              target_qty,
+              sale_price,
+              purchase_price,
+              discount,
+              expiry,
+              location,
+              remarks,
+              timestamp,
+              timestamp,
+            ]
+          );
+          rowCount++;
+        } catch (err) {
+          console.error("DB error:", err);
+          errorCount++;
+        }
+      }
+
+      alert(
+        `Import complete: ${rowCount} rows inserted, ${errorCount} errors.`
+      );
+    };
+
+    reader.readAsText(file);
   };
 
   const openFileInput = () => {
@@ -116,20 +225,7 @@ const StockManagement: React.FC = () => {
           <h2 className="text-xl font-semibold text-gray-800 flex items-center">
             <FaBoxesStacked className="highlight mr-2" />
             Stock List
-            <button
-              onClick={openFileInput}
-              className="buttons bg-yellow-400 hover:bg-yellow-500 text-sm ml-4 flex items-center"
-            >
-              <FaDownload className="mr-1" /> Import CSV
-            </button>
-            <input
-              title="Upload CSV"
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              accept=".csv"
-              style={{ display: "none" }}
-            />
+            <CSVUploader onFileParsed={handleParsedData} />
           </h2>
 
           {/* Search Bar */}
@@ -202,27 +298,15 @@ const StockManagement: React.FC = () => {
                   onClick={() => setCurrentItem(item)}
                   className="cursor-pointer hover:bg-gray-100 border-light"
                 >
-                  <td className="py-1 lg:py-2 px-4  text-sm">
-                    {index + 1}
-                  </td>
-                  <td className="py-1 lg:py-2 px-4  text-sm">
-                    {item.name}
-                  </td>
-                  <td className="py-1 lg:py-2 px-4  text-sm">
-                    {item.code}
-                  </td>
-                  <td className="py-1 lg:py-2 px-4  text-sm">
-                    {item.qty}
-                  </td>
-                  <td className="py-1 lg:py-2 px-4  text-sm">
-                    {item.unit}
-                  </td>
+                  <td className="py-1 lg:py-2 px-4  text-sm">{index + 1}</td>
+                  <td className="py-1 lg:py-2 px-4  text-sm">{item.name}</td>
+                  <td className="py-1 lg:py-2 px-4  text-sm">{item.code}</td>
+                  <td className="py-1 lg:py-2 px-4  text-sm">{item.qty}</td>
+                  <td className="py-1 lg:py-2 px-4  text-sm">{item.unit}</td>
                   <td className="py-1 lg:py-2 px-4  text-sm">
                     ${item.sale_price}
                   </td>
-                  <td className="py-1 lg:py-2 px-4  text-sm">
-                    {item.expiry}
-                  </td>
+                  <td className="py-1 lg:py-2 px-4  text-sm">{item.expiry}</td>
                   <td className="py-1 lg:py-2 px-4  text-sm">
                     {item.location}
                   </td>

@@ -12,12 +12,16 @@ interface User {
   email: string;
   password?: string;
   image?: string | null;
+  first_login: boolean;
 }
 
 interface AuthState {
   user: User | null;
   error: string | null;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; isFirstLogin: boolean }>;
   logout: () => Promise<void>;
   loadSession: (navigate: (path: string) => void) => Promise<void>;
 }
@@ -38,13 +42,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       const db = await Database.load("sqlite:learn_pos.db");
 
       const users = await db.select<User[]>(
-        "SELECT id, username, email, password, image FROM users WHERE email = ?",
+        "SELECT id, username, email, password, image, first_login  FROM users WHERE email = ?",
         [email]
       );
 
       if (users.length === 0) {
-        set({ error: "User not found." });
-        return false;
+        return { success: false, isFirstLogin: false };
       }
 
       const user = users[0];
@@ -54,7 +57,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (!passwordMatches) {
         set({ error: "Invalid credentials." });
-        return false;
+        return { success: false, isFirstLogin: false };
       }
 
       // Save session in DB
@@ -63,6 +66,13 @@ export const useAuthStore = create<AuthState>((set) => ({
         "INSERT INTO sessions (user_id, token, is_active) VALUES (?, ?, 1)",
         [user.id, token]
       );
+      // Update first_login flag if it's their first login
+      let isFirstLogin = user.first_login;
+      if (isFirstLogin) {
+        await db.execute("UPDATE users SET first_login = 0 WHERE id = ?", [
+          user.id,
+        ]);
+      }
 
       set({
         user: {
@@ -70,15 +80,16 @@ export const useAuthStore = create<AuthState>((set) => ({
           username: user.username,
           email: user.email,
           image: user.image || null,
+          first_login: false,
         },
         error: null,
       });
 
-      return true;
+      return { success: true, isFirstLogin };
     } catch (err) {
       console.error("Login error:", err);
       set({ error: "An error occurred. Please try again." });
-      return false;
+      return { success: false, isFirstLogin: false };
     }
   },
 
@@ -117,7 +128,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (session.length === 0) return;
 
       const userResult = await db.select<User[]>(
-        "SELECT id, username, email, image FROM users WHERE id = ?",
+        "SELECT id, username, email, image, first_login FROM users WHERE id = ?",
         [session[0].user_id]
       );
 
@@ -129,6 +140,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             username: user.username,
             email: user.email,
             image: user.image || null,
+            first_login: user.first_login,
           },
           error: null,
         });

@@ -1,6 +1,3 @@
-
-
-
 import { create } from "zustand";
 import  Database  from "@tauri-apps/plugin-sql";
 
@@ -8,7 +5,7 @@ interface StockItem {
   id: number | null;
   name: string;
   code: string;
-
+  type: string;
   category: string;
   unit: string;
   qty: number;
@@ -63,7 +60,7 @@ interface StockStore {
   setPSalePrice: (value: number) => void;
   setPurchaseFactor: (value: number) => void;
   setSaleFactor: (value: number) => void;
-
+  handleParsedData: (rows: StockItem[]) => Promise<void>;
   // Computed values
   unitSalePrice: string;
   unitPurchasePrice: string;
@@ -82,7 +79,7 @@ export const useStockStore = create<StockStore>((set, get) => {
       id: null,
       name: "",
       code: "",
-     
+      type: "",
       category: "",
       unit: "",
       qty: 0,
@@ -190,7 +187,7 @@ export const useStockStore = create<StockStore>((set, get) => {
           // Update existing item
           const result = await db.execute(
             `UPDATE stock SET 
-              name = ?, code = ?, category = ?, unit = ?, 
+              name = ?, code = ?,type=?, category = ?, unit = ?, 
               qty = ?, min_qty = ?, target_qty = ?, sale_price = ?, 
               purchase_price = ?, discount = ?, expiry = ?, location = ?, 
               remarks = ?, updated_at = ?
@@ -198,6 +195,7 @@ export const useStockStore = create<StockStore>((set, get) => {
             [
               currentItem.name,
               currentItem.code,
+              currentItem.type,
               currentItem.category,
               currentItem.unit,
               currentItem.qty,
@@ -242,13 +240,14 @@ export const useStockStore = create<StockStore>((set, get) => {
 
         const result = await db.execute(
           `INSERT INTO stock (
-            name, code, category, unit, qty, min_qty, target_qty,
+            name, code,type, category, unit, qty, min_qty, target_qty,
             sale_price, purchase_price, discount, expiry, location, remarks,
             created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          ) VALUES (?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             currentItem.name,
             currentItem.code,
+            currentItem.type,
             currentItem.category,
             currentItem.unit,
             currentItem.qty,
@@ -304,7 +303,7 @@ export const useStockStore = create<StockStore>((set, get) => {
           id: null,
           name: "",
           code: "",
-        
+          type: "",
           category: "",
           unit: "",
           qty: 0,
@@ -420,7 +419,79 @@ export const useStockStore = create<StockStore>((set, get) => {
       doc.save("stock.pdf");
     },
 
-    // Price calculator actions
+    handleParsedData: async (rows: StockItem[]) => {
+      try {
+        const db = await getDb();
+
+        for (const row of rows) {
+          const cleaned = {
+            name: row.name?.trim() || "",
+            code: row.code?.trim() || "",
+            type: row.type?.trim() || "",
+            category: row.category?.trim() || "",
+            unit: row.unit?.trim() || "",
+            qty: row.qty || 0,
+            min_qty: row.min_qty || 0,
+            target_qty: row.target_qty || 0,
+            sale_price: row.sale_price || 0,
+            purchase_price: row.purchase_price || 0,
+            discount: row.discount || 0,
+            expiry: /^\d{4}-\d{2}-\d{2}$/.test(row.expiry ?? "")
+              ? row.expiry ?? ""
+              : "",
+            location: row.location?.trim() || "",
+            remarks: row.remarks?.trim() || "",
+          };
+
+          if (!cleaned.name || !cleaned.code) continue;
+
+          try {
+            const timestamp = new Date()
+              .toISOString()
+              .slice(0, 19)
+              .replace("T", " ");
+              const result = await db.execute(
+                `INSERT INTO stock 
+                (name, code, type, category, unit, qty, min_qty, target_qty, sale_price, purchase_price, discount, expiry, location, remarks, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+               ON CONFLICT(code) DO UPDATE SET 
+                 name=excluded.name, qty=excluded.qty, updated_at=datetime('now')`,
+                [
+                  cleaned.name,
+                  cleaned.code,
+                  cleaned.type,
+                  cleaned.category,
+                  cleaned.unit,
+                  cleaned.qty,
+                  cleaned.min_qty,
+                  cleaned.target_qty,
+                  cleaned.sale_price,
+                  cleaned.purchase_price,
+                  cleaned.discount,
+                  cleaned.expiry,
+                  cleaned.location,
+                  cleaned.remarks,
+                  timestamp,
+                  timestamp,
+                ]
+              );
+            if (result.rowsAffected > 0) {
+              get().fetchStockItems();
+              get().fetchStats();
+              get().resetCurrentItem();
+            }
+          } catch (rowError) {
+            console.error("Error inserting row:", cleaned.code, rowError);
+          }
+        }
+
+        alert("Stock data imported successfully!");
+      } catch (error) {
+        console.error("Error during stock data import:", error);
+        alert("An error occurred while importing stock data.");
+      }
+    },
+
     setPPurchasePrice: (value) => set({ pPurchasePrice: value }),
     setPSalePrice: (value) => set({ pSalePrice: value }),
     setPurchaseFactor: (value) => set({ purchaseFactor: value }),
