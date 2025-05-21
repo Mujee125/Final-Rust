@@ -1,16 +1,8 @@
 import { create } from 'zustand';
 import Database from "@tauri-apps/plugin-sql";
+import { Person } from '../components/types';
 
-export interface Person {
-  id: number;
-  name: string;
-  role: string;
-  contact: string;
-  address: string;
-  remarks: string;
-  account: string;
-  invoices_no: number;
-}
+
 
 interface Invoice {
   id: number;
