@@ -1,149 +1,332 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-use tauri_plugin_sql::{Migration, MigrationKind};
+// mod database;
+// mod models;
+// mod schema;
+// mod commands; 
+// mod state;
+// use commands::person::*;
+// use commands::dropdown::*;
+// use commands::stock::*;
+// use commands::cart::*;
+// use commands::settings::*;
+// use state::settings::*;
+// use commands::auth::*;
+// use commands::dashboard::*;
+// use commands::register::*;
+// use tauri::AppHandle;
+// use database::connection::initialize_database;
+
+// #[tauri::command]
+// fn greet(name: &str) -> String {
+//     format!("Hello, {}! You've been greeted from Rust!", name)
+// }
+
+// #[tauri::command]
+// async fn initialize_db(app: AppHandle) -> Result<(), String> {
+//     initialize_database(&app).map_err(|e| e.to_string())
+// }
+
+// #[cfg_attr(mobile, tauri::mobile_entry_point)]
+// pub fn run() {
+//     tauri::Builder::default()
+//         .plugin(tauri_plugin_opener::init())
+//         .invoke_handler(tauri::generate_handler![
+            
+//                  // testing
+//                  greet, 
+//                  // database
+//                  initialize_db ,
+
+//                   //persons
+//                   create_person,
+//                   get_all_persons_command,
+//                   get_invoices_by_person_id_command,
+//                 update_person_command,
+//                 delete_person_command,
+//                 upsert_person_command,
+
+
+//                 // dropdown
+//                 fetch_dropdown_items,
+//                 add_dropdown_item_command,
+//                 update_dropdown_item_command,
+//                 delete_dropdown_item_command,
+
+//                 // stock
+//                 fetch_stock_items,
+//                 fetch_stock_stats,save_stock_item,
+//                 delete_stock_item,
+//                 import_stock_items,
+
+//                 // cart 
+//                 fetch_cart_items,
+//                 add_cart_item,
+//                 update_cart_item_quantity,
+//                 remove_cart_item,
+//                 create_new_invoice,
+//                 update_invoice_details,
+//                 fetch_recent_invoices,
+//                 calculate_cart_summary_command,
+//                 checkout_invoice,
+
+//                      // Settings commands
+//             get_shop_settings,
+//             save_shop_settings,
+//             get_user_settings,
+//             save_user_settings,
+//             upload_image,
+//             initialize_settings,
+//             get_current_shop_settings,
+//             get_current_user_settings,
+
+//             // auth
+
+//             login,
+//             logout,
+//             load_session,
+
+//             // dashboard
+
+//             fetch_dashboard_stats,
+//             fetch_daily_stats,
+
+
+//             // register 
+
+//             register_user,
+//             reset_register,
+//         ])
+//         .run(tauri::generate_context!())
+//         .expect("error while running tauri application");
+// }
+
+// #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+// mod database;
+// mod models;
+// mod schema;
+// mod commands;
+// mod state;
+
+// use commands::person::*;
+// use commands::dropdown::*;
+// use commands::stock::*;
+// use commands::cart::*;
+// use commands::settings::*;
+
+// use commands::auth::*;
+// use commands::dashboard::*;
+// use commands::register::*;
+// use tauri::{AppHandle, Manager};
+// use database::connection::initialize_database;
+// use state::settings::*;
+// use std::sync::Mutex;
+
+
+// #[tauri::command]
+// fn greet(name: &str) -> String {
+//     format!("Hello, {}! You've been greeted from Rust!", name)
+// }
+
+// #[tauri::command]
+// async fn initialize_db(app: AppHandle) -> Result<(), String> {
+//     initialize_database(&app).map_err(|e| e.to_string())
+// }
+
+// #[cfg_attr(mobile, tauri::mobile_entry_point)]
+// pub fn run() {
+//     tauri::Builder::default()
+//         .plugin(tauri_plugin_opener::init())
+//         .setup(|app| {
+//             // Initialize and manage your states here
+//             app.manage(SettingsState {
+//                 shop: Mutex::new(None),
+//                 user: Mutex::new(None),
+//             });
+            
+//             Ok(())
+//         })
+//         .invoke_handler(tauri::generate_handler![
+//             greet,
+//             initialize_db,
+            
+//             // persons
+//             create_person,
+//             get_all_persons_command,
+//             get_invoices_by_person_id_command,
+//             update_person_command,
+//             delete_person_command,
+//             upsert_person_command,
+
+//             // dropdown
+//             fetch_dropdown_items,
+//             add_dropdown_item_command,
+//             update_dropdown_item_command,
+//             delete_dropdown_item_command,
+
+//             // stock
+//             fetch_stock_items,
+//             fetch_stock_stats,
+//             save_stock_item,
+//             delete_stock_item,
+//             import_stock_items,
+
+//             // cart 
+//             fetch_cart_items,
+//             add_cart_item,
+//             update_cart_item_quantity,
+//             remove_cart_item,
+//             create_new_invoice,
+//             update_invoice_details,
+//             fetch_recent_invoices,
+//             calculate_cart_summary_command,
+//             checkout_invoice,
+
+//             // Settings commands
+//             get_shop_settings,
+//             save_shop_settings,
+//             get_user_settings,
+//             save_user_settings,
+//             upload_image,
+//             initialize_settings,
+//             get_current_shop_settings,
+//             get_current_user_settings,
+
+//             // auth
+//             login,
+//             logout,
+//             load_session,
+
+//             // dashboard
+//             fetch_dashboard_stats,
+//             fetch_daily_stats,
+
+//             // register 
+//             register_user,
+//             reset_register,
+//         ])
+//         .run(tauri::generate_context!())
+//         .expect("error while running tauri application");
+// }
+
+#[cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+mod database;
+mod models;
+mod schema;
+mod commands;
+mod state;
+
+use commands::person::*;
+use commands::dropdown::*;
+use commands::stock::*;
+use commands::cart::*;
+use commands::settings::*;
+use commands::auth::*;
+use commands::dashboard::*;
+use commands::register::*;
+use commands::invoice::*;
+
+use tauri::{AppHandle, Manager};
+use database::connection::{initialize_database, establish_connection};
+use state::settings::*;
+use std::sync::Mutex;
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
+#[tauri::command]
+async fn initialize_db(app: AppHandle) -> Result<(), String> {
+    initialize_database(&app).map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-
- let migrations = vec![
-        // Define your migrations here
-        Migration {
-            version: 1,
-            description: "create_initial_tables",
-            sql: "
-            PRAGMA foreign_keys = ON;
-            PRAGMA journal_mode = WAL;
-
-             CREATE TABLE IF NOT EXISTS cart (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        stock_id INTEGER NOT NULL,
-        invoice_id INTEGER NOT NULL,
-        qty REAL NOT NULL,
-        price REAL NOT NULL,
-        discount REAL DEFAULT 0,
-        FOREIGN KEY (stock_id) REFERENCES stock(id),
-        FOREIGN KEY (invoice_id) REFERENCES invoices(id)
-    );
-  
-    CREATE TABLE IF NOT EXISTS categories (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL
-    );
-  
-    CREATE TABLE IF NOT EXISTS invoices (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        invoice_no TEXT NOT NULL,
-        reference TEXT NOT NULL,
-        type TEXT NOT NULL,
-        date DATE NOT NULL,
-        discount REAL DEFAULT 0,
-        received REAL NOT NULL,
-        tax REAL DEFAULT 0,
-        remarks TEXT,
-        person_id INTEGER NOT NULL,
-        user_id INTEGER NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-   
-    CREATE TABLE IF NOT EXISTS locations (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL
-    );
- 
-    CREATE TABLE IF NOT EXISTS persons (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        role TEXT NOT NULL,
-        contact TEXT NOT NULL UNIQUE,
-        account TEXT,
-        address TEXT NOT NULL,
-        remarks TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
- 
-    CREATE TABLE IF NOT EXISTS roles (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL
-    );
-  
-    CREATE TABLE IF NOT EXISTS shop (
-        id INTEGER PRIMARY KEY,
-        name TEXT,
-        description TEXT,
-        contact TEXT,
-        email TEXT,
-        website TEXT,
-        address TEXT,
-        image TEXT
-    );
-  
-    CREATE TABLE IF NOT EXISTS stock (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        code TEXT NOT NULL UNIQUE,
-        type TEXT NOT NULL,
-        category TEXT NOT NULL,
-        unit TEXT NOT NULL,
-        qty INTEGER NOT NULL,
-        min_qty INTEGER NOT NULL,
-        target_qty INTEGER NOT NULL,
-        sale_price REAL NOT NULL,
-        purchase_price REAL NOT NULL,
-        discount REAL DEFAULT 0,
-        expiry DATE NOT NULL,
-        location TEXT NOT NULL,
-        remarks TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
- 
-    CREATE TABLE IF NOT EXISTS types (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL
-    );
-  
-    CREATE TABLE IF NOT EXISTS units (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS sessions (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id TEXT NOT NULL,
-  token TEXT NOT NULL,
-  is_active BOOLEAN DEFAULT 1
-);
-
-    
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL,
-        email TEXT NOT NULL,
-        password TEXT NOT NULL,
-        image TEXT,
-        status INTEGER,
-        person_id INTEGER,
-        first_login BOOLEAN DEFAULT 1,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-
-
-    ",
-            kind: MigrationKind::Up,
-        }
-    ];
-
     tauri::Builder::default()
-        .plugin(tauri_plugin_sql::Builder::new()
-        .add_migrations("sqlite:learn_pos.db", migrations).build())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .setup(|app| {
+            let app_handle = app.handle();
+            // Initialize and manage settings state
+            app.manage(SettingsState {
+                shop: Mutex::new(None),
+                user: Mutex::new(None),
+            });
+
+            // Initialize DB (create tables)
+            initialize_database(&app_handle)?;
+
+            // Establish and manage the database connection
+            let conn = establish_connection(&app_handle)?;
+            app.manage(Mutex::new(conn)); // << this registers the DB for use with `.state()`
+
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            initialize_db,
+
+            // persons
+            create_person,
+            get_all_persons_command,
+            get_invoices_by_person_id_command,
+            update_person_command,
+            delete_person_command,
+            upsert_person_command,
+
+            // dropdown
+            fetch_dropdown_items,
+            add_dropdown_item_command,
+            update_dropdown_item_command,
+            delete_dropdown_item_command,
+
+            // stock
+            fetch_stock_items,
+            fetch_stock_stats,
+            save_stock_item,
+            delete_stock_item,
+            import_stock_items,
+
+            // cart 
+            fetch_cart_items,
+            add_cart_item,
+            update_cart_item_quantity,
+            remove_cart_item,
+            create_new_invoice,
+            update_invoice_details,
+            fetch_recent_invoices,
+            calculate_cart_summary_command,
+            checkout_invoice,
+
+            // Settings commands
+            get_shop_settings,
+            save_shop_settings,
+            get_user_settings,
+            save_user_settings,
+            upload_image,
+            initialize_settings,
+            get_current_shop_settings,
+            get_current_user_settings,
+
+            // auth
+            login,
+            logout,
+            load_session,
+
+            // dashboard
+            fetch_dashboard_stats,
+            fetch_daily_stats,
+
+            // register 
+            register_user,
+            reset_register,
+
+            // invoice
+            fetch_invoices,
+            fetch_invoice_with_items,
+        delete_invoice_cmd,
+            
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

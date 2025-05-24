@@ -1,0 +1,20 @@
+pub mod connection;
+pub mod dropdown;
+pub mod stock;
+pub mod invoice;
+// pub mod user;
+// pub mod shop;
+// pub mod helpers; // optional for dynamic queries
+pub mod cart;
+// pub mod category;
+// pub mod location;
+pub mod person;
+pub mod settings;
+pub mod auth;
+pub mod dashboard;
+pub mod register;
+// pub mod role;
+// pub mod r#type;
+// pub mod unit;
+// pub mod stats;
+// pub mod charts;

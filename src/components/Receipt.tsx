@@ -83,9 +83,9 @@ const Receipt: React.FC<ReceiptProps> = ({
                 <td className="p-1">{index + 1}</td>
                 <td className="p-1">{item.name}</td>
                 <td className="p-1 text-right">{item.qty}</td>
-                <td className="p-1 text-right">{item.price.toFixed(2)}</td>
+                <td className="p-1 text-right">{item.price}</td>
                 <td className="p-1 text-right">
-                  {(item.qty * item.price).toFixed(2)}
+                  {(item.qty * item.price)}
                 </td>
               </tr>
             ))}
@@ -97,24 +97,24 @@ const Receipt: React.FC<ReceiptProps> = ({
           <tbody>
             <tr>
               <td className="p-1 text-right text-gray-700">Discount (Rs.):</td>
-              <td className="p-1 text-right">{discountRS.toFixed(2)}</td>
+              <td className="p-1 text-right">{discountRS}</td>
             </tr>
             <tr>
               <td className="p-1 text-right text-gray-700">Tax (Rs.):</td>
-              <td className="p-1 text-right">{taxRS.toFixed(2)}</td>
+              <td className="p-1 text-right">{taxRS}</td>
             </tr>
             <tr className="font-bold border-t border-gray-400">
               <td className="p-1 text-right">Net Total (Rs.):</td>
-              <td className="p-1 text-right">{total.toFixed(2)}</td>
+              <td className="p-1 text-right">{total}</td>
             </tr>
             <tr>
               <td className="p-1 text-right text-gray-700">Paid (Rs.):</td>
-              <td className="p-1 text-right">{invoice.received.toFixed(2)}</td>
+              <td className="p-1 text-right">{invoice.received}</td>
             </tr>
             <tr>
               <td className="p-1 text-right text-gray-700">Balance (Rs.):</td>
               <td className="p-1 text-right">
-                {(net - invoice.received).toFixed(2)}
+                {(net - invoice.received)}
               </td>
             </tr>
           </tbody>

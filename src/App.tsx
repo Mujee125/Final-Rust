@@ -55,7 +55,7 @@ function App() {
               <Route path="/register" component={Register} />
 
               {/* Protected routes */}
-              {isLoggedIn ? (
+               {isLoggedIn ? (
                 <>
                   <Route path="/dashboard" component={Dashboard} />
                   <Route path="/cart" component={CartManagement} />
@@ -67,7 +67,8 @@ function App() {
                 </>
               ) : (
                 <Route>🔒 Please log in to access this page.</Route>
-              )}
+              )} 
+            
             </Switch>
           </div>
         </div>
