@@ -182,7 +182,9 @@ const { initializeData } = useCartStore();
                 >
                   <span className="flex-1 text-left">{invoice.date}</span>
                   <span className="flex-1 text-left">{invoice.invoice_no}</span>
-                  <span className="flex-1 text-left">{invoice.type}</span>
+                  <span className="flex-1 text-left">
+                    {invoice.invoice_type}
+                  </span>
                   <span className="flex-1 text-left">{invoice.person}</span>
                   <span className="flex-1 text-left text-gray-800 font-semibold">
                     {invoice.total ? invoice.total.toFixed(0) : "0"}

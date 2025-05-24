@@ -1,10 +1,10 @@
-import  Database  from "@tauri-apps/plugin-sql";
 
-import React, { useEffect, useRef } from "react";
+
+import React, { useEffect } from "react";
 import { useStockStore } from "../stores/stockStore";
 import {
   FaSearch,
-  FaDownload,
+ 
   FaUpload,
   FaPlus,
   FaEdit,
@@ -49,132 +49,12 @@ const StockManagement: React.FC = () => {
     handleParsedData,
   } = useStockStore();
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchStockItems();
     fetchStats();
   }, []);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    const timestamp = new Date().toISOString(); // Single timestamp for all operations
-
-    reader.onload = async (event) => {
-      const text = event.target?.result as string;
-      if (!text) return;
-
-      const lines = text
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean);
-      if (lines.length < 2) {
-        alert("CSV file must contain a header and at least one row.");
-        return;
-      }
-
-      const header = lines[0].split(",").map((h) => h.trim());
-      const expectedColumns = 14;
-      if (header.length < expectedColumns) {
-        alert("CSV format is incorrect. At least 14 columns expected.");
-        return;
-      }
-
-      const db = await Database.load("sqlite:learn_pos.db");
-      let rowCount = 0;
-      let errorCount = 0;
-
-      for (let i = 1; i < lines.length; i++) {
-        const row = lines[i].split(",").map((cell) => cell.trim());
-
-        if (row.length < expectedColumns) {
-          errorCount++;
-          continue;
-        }
-
-        const [
-          name,
-          code,
-          category,
-          unit,
-          qtyStr,
-          minQtyStr,
-          targetQtyStr,
-          salePriceStr,
-          purchasePriceStr,
-          discountStr,
-          expiry,
-          location,
-          remarks,
-          // Note: Removed 'type' from destructuring as it's not in your target query
-        ] = row;
-
-        if (!name || !code) {
-          errorCount++;
-          continue;
-        }
-
-        // Convert types
-        const qty = Number(qtyStr) || 0;
-        const min_qty = Number(minQtyStr) || 0;
-        const target_qty = Number(targetQtyStr) || 0;
-        const sale_price = Number(salePriceStr) || 0.0;
-        const purchase_price = Number(purchasePriceStr) || 0.0;
-        const discount = Number(discountStr) || 0.0;
-
-        // Expiry date validation (YYYY-MM-DD)
-        const expiryValid = !expiry || /^\d{4}-\d{2}-\d{2}$/.test(expiry);
-        if (!expiryValid) {
-          errorCount++;
-          continue;
-        }
-
-        try {
-          await db.execute(
-            `INSERT INTO stock (
-              name, code, category, unit, qty, min_qty, target_qty,
-              sale_price, purchase_price, discount, expiry, location, remarks,
-              created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              name,
-              code,
-              category,
-              unit,
-              qty,
-              min_qty,
-              target_qty,
-              sale_price,
-              purchase_price,
-              discount,
-              expiry,
-              location,
-              remarks,
-              timestamp,
-              timestamp,
-            ]
-          );
-          rowCount++;
-        } catch (err) {
-          console.error("DB error:", err);
-          errorCount++;
-        }
-      }
-
-      alert(
-        `Import complete: ${rowCount} rows inserted, ${errorCount} errors.`
-      );
-    };
-
-    reader.readAsText(file);
-  };
-
-  const openFileInput = () => {
-    fileInputRef.current?.click();
-  };
 
   return (
     <div className="flex overflow-hidden">

@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "ZostikPOS",
+  "productName": "zostik-pos",
   "version": "0.1.0",
-  "identifier": "com.learnpos.app",
+  "identifier": "com.zostik-pos.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -22,7 +22,7 @@
     }
   },
   "bundle": {
-    "copyright": "Copyright © 2025  www.zostik.com",
+    "copyright": "Copyright © 2025  Zostik Team.",
     "windows": {
       "nsis": {
         "installerIcon": "./icons/icon.ico",

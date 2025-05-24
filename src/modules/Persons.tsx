@@ -1,8 +1,7 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { Person, usePersonsStore } from "../stores/personsStore";
 import {
   FaSearch,
-  FaDownload,
   FaUpload,
   FaPlus,
   FaEdit,
@@ -11,22 +10,21 @@ import {
   FaPlusCircle,
 } from "react-icons/fa";
 import ExtendableDropdown from "../components/ExtendableDropdown";
-import { useCartStore } from "../stores/cartStore";
+// import { useCartStore } from "../stores/cartStore";
 import { useLocation } from "wouter";
 import { FaBox, FaUsers } from "react-icons/fa6";
 import CSVUploader from "../components/CSVUploader";
 
 const Persons: React.FC = () => {
   const {
-    
     filteredPersons,
     invoices,
     currentPerson,
- 
+
     searchQuery,
     fetchPersons,
-  handleParsedData,
-   
+    handleParsedData,
+
     addPerson,
     updatePerson,
     deletePerson,
@@ -37,33 +35,18 @@ const Persons: React.FC = () => {
     downloadPDF,
   } = usePersonsStore();
 
-  const { initializeData } = useCartStore();
-  
+  // const { initializeData } = useCartStore();
+
   const [, setLocation] = useLocation();
 
-  const fetchInvoiceForCart = async (invoiceId: number) => {
-    setLocation(`/cart`);
-    await initializeData(invoiceId);
-      
-  };
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // const fetchInvoiceForCart = async (invoiceId: number) => {
+  //   setLocation(`/cart`);
+  //   await initializeData(invoiceId);
+  // };
 
   useEffect(() => {
     fetchPersons();
   }, []);
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      // Handle CSV import here
-      console.log("File selected:", e.target.files[0]);
-      // You would implement the actual CSV import logic here
-    }
-  };
-
-  const openFileInput = () => {
-    fileInputRef.current?.click();
-  };
 
   return (
     <div className="flex overflow-hidden">
@@ -376,7 +359,7 @@ const Persons: React.FC = () => {
                   
                   text-blue-500 hover:text-blue-700 text-sm"
                   >
-                    <button
+                    {/* <button
                       onClick={() => {
                         fetchInvoiceForCart(invoice.id);
                       }}
@@ -384,7 +367,7 @@ const Persons: React.FC = () => {
                       className="text-blue-500 hover:text-blue-700 cursor-pointer"
                     >
                       <FaEdit />
-                    </button>
+                    </button> */}
                   </td>
                 </tr>
               ))}

@@ -255,7 +255,6 @@ const CartManagement = () => {
                       key={product.id}
                       className="group  hover:bg-green-100 border-b border-gray-200"
                     >
-                      
                       <td className="py-2 px-0 text-sm m-0">
                         <button
                           title="Decrease"
@@ -310,7 +309,7 @@ const CartManagement = () => {
                       <td className="py-2 px-4 text-sm">{product.unit}</td>
                       <td className="py-2 px-4 text-sm">{product.price}</td>
                       <td className="py-2 px-4  text-sm">
-                        {(product.price * product.qty).toFixed(0)}
+                        {product.price * product.qty}
                       </td>
                       <td className="py-2 px-4 text-sm">{product.location}</td>
                       <td
@@ -504,12 +503,10 @@ const CartManagement = () => {
                   {recentInvoices.map((inv) => (
                     <tr key={inv.id} className="border-b border-gray-200">
                       <td className="p-1  ">{inv.invoice_no}</td>
-                      <td className="p-1  ">{inv.type}</td>
+                      <td className="p-1  ">{inv.invoice_type}</td>
                       <td className="p-1  ">{inv.date}</td>
                       <td className="p-1  ">{inv.person}</td>
-                      <td className="p-1  ">
-                        {inv.total ? inv.total.toFixed(0) : "0"}
-                      </td>
+                      <td className="p-1  ">{inv.total ? inv.total : "0"}</td>
                       <td className="border-b border-gray-200 text-center text-blue-500 hover:text-blue-700 text-sm">
                         <button
                           title="Edit Invoice"
@@ -599,7 +596,7 @@ const CartManagement = () => {
             id="netAmount"
             className="w-full p-2 text-xl text-center border-light rounded-md shadow-md bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Net Amount"
-            value={calculationData.net.toFixed(0)}
+            value={calculationData.net}
             disabled
           />
           <label htmlFor="netAmount" className="block text-sm font-medium">
@@ -628,7 +625,7 @@ const CartManagement = () => {
         <div>
           <input
             type="text"
-            value={calculationData.discountRS.toFixed(0)}
+            value={calculationData.discountRS}
             className="w-full p-2 text-xl text-center border-light bg-green-100 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Enter Discount"
             disabled
@@ -643,7 +640,7 @@ const CartManagement = () => {
         {/* Tax Input */}
         <div className="mb-2">
           <input
-            value={calculationData.taxRS.toFixed(0)}
+            value={calculationData.taxRS}
             type="text"
             id="productTaxRS"
             className="w-full p-2 text-xl text-center border-light bg-orange-100 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -657,7 +654,7 @@ const CartManagement = () => {
         {/* Balance Amount */}
         <div>
           <input
-            value={calculationData.balance.toFixed(0)}
+            value={calculationData.balance}
             type="text"
             id="balanceAmount"
             className="w-full p-2 text-xl text-center border-light rounded-md shadow-md bg-green-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -689,7 +686,7 @@ const CartManagement = () => {
             id="totalAmount"
             className="w-full p-2 text-xl text-center border-light rounded-md shadow-md bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Total Amount"
-            value={calculationData.total.toFixed(0)}
+            value={calculationData.total}
             disabled
           />
           <label htmlFor="totalAmount" className="block text-sm font-medium">
