@@ -28,10 +28,10 @@ const Dashboard: React.FC = () => {
   const { recentInvoices } = useCartStore();
 const { initializeData } = useCartStore();
   
-  const [, setLocation] = useLocation();
+      const [, navigate] = useLocation();
 
   const fetchInvoiceForCart = async (invoiceId: number) => {
-    setLocation(`/cart`);
+    navigate(`/cart/${invoiceId}`);
     await initializeData(invoiceId);
     
   };
