@@ -114,6 +114,7 @@ pub fn run() {
 
             // invoice
             fetch_invoices,
+            //fetch_invoice_by_id,
             fetch_invoice_with_items,
             delete_invoice_cmd,
             

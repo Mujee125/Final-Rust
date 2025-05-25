@@ -2,6 +2,37 @@ use serde::{Deserialize, Serialize};
 use chrono::{NaiveDate, NaiveDateTime};
 use rusqlite::Row;
 
+#[derive(Serialize)]
+pub struct FullInvoiceItem {
+    pub name: String,
+    pub code: String,
+    pub qty: f64,
+    pub price: f64,
+    pub discount: f64,
+    pub subtotal: f64,
+}
+
+#[derive(Serialize)]
+pub struct FullInvoice {
+    pub id: i32,
+    pub invoice_no: String,
+    pub reference: String,
+    pub type_: String,
+    pub date: String,
+    pub discount: f64,
+    pub received: f64,
+    pub tax: f64,
+    pub remarks: Option<String>,
+    pub person_id: i32,
+    pub user_id: i32,
+    pub created_at: String,
+    pub updated_at: String,
+    pub total: f64,
+    pub net: f64,
+    pub items: Vec<FullInvoiceItem>,
+}
+
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Person {
     pub id: i32,

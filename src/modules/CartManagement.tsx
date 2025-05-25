@@ -16,13 +16,15 @@ import {
 import { useReactToPrint } from "react-to-print";
 import { FaXmark } from "react-icons/fa6";
 import { useCartStore } from "../stores/cartStore";
-import { Link } from "wouter";
+import { Link, useRoute } from "wouter";
 import Invoice from "../components/Invoice";
 import { useSettingsStore } from "../stores/settingsStore";
 import { useAuthStore } from "../stores/authStore";
 import Receipt from "../components/Receipt";
 
 const CartManagement = () => {
+const [match, params] = useRoute("/cart/:invoiceId");
+
   const componentRef = useRef<HTMLDivElement>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
   const {
@@ -55,7 +57,12 @@ const CartManagement = () => {
     updateCalculations,
   } = useCartStore();
 
- 
+
+  useEffect(() => {
+    if (params?.invoiceId && parseInt(params?.invoiceId)) {
+      initializeData(parseInt(params?.invoiceId));
+    }
+  }, [params?.invoiceId]);
   const [calculationData, setCalculationData] = useState({
     total: 0,
     discountRS: 0,
