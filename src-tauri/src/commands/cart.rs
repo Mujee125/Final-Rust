@@ -89,38 +89,101 @@ pub async fn update_cart_item_quantity(
     .map_err(|e| format!("Task join error: {}", e))?
 }
 
+// #[tauri::command]
+// pub async fn remove_cart_item(
+//     app: AppHandle,
+//     cart_item_id: i32,
+//     stock_id: i32,
+//     qty: f64,
+//     invoice_type: String,
+// ) -> Result<usize, String> {
+//     spawn_blocking(move || {
+//         let conn = establish_connection(&app).map_err(|e| e.to_string())?;
+        
+//         // Start transaction
+//         conn.execute("BEGIN", []).map_err(|e| e.to_string())?;
+
+//         // Delete cart item
+//         let result = delete_cart_item(&conn, cart_item_id).map_err(|e| e.to_string())?;
+
+//         // Update stock based on invoice type
+//         let qty_change = if invoice_type == "Sale" { qty } else { -qty };
+//         conn.execute(
+//             "UPDATE stock SET qty = qty + ?1 WHERE id = ?2",
+//             params![qty_change, stock_id],
+//         ).map_err(|e| e.to_string())?;
+
+//         // Commit transaction
+//         conn.execute("COMMIT", []).map_err(|e| e.to_string())?;
+
+//         Ok(result)
+//     })
+//     .await
+//     .map_err(|e| format!("Task join error: {}", e))?
+// }
+
 #[tauri::command]
-pub async fn remove_cart_item(
-    app: AppHandle,
-    cart_item_id: i32,
-    stock_id: i32,
-    qty: f64,
-    invoice_type: String,
-) -> Result<usize, String> {
+pub async fn remove_cart_item(app: AppHandle, cart_item_id: i32) -> Result<usize, String> {
+    use rusqlite::params;
+
     spawn_blocking(move || {
         let conn = establish_connection(&app).map_err(|e| e.to_string())?;
-        
+
         // Start transaction
         conn.execute("BEGIN", []).map_err(|e| e.to_string())?;
 
-        // Delete cart item
-        let result = delete_cart_item(&conn, cart_item_id).map_err(|e| e.to_string())?;
+        // Step 1: Get stock_id, qty, and invoice_id
+        let mut stmt = conn
+            .prepare("SELECT stock_id, qty, invoice_id FROM cart WHERE id = ?1")
+            .map_err(|e| e.to_string())?;
 
-        // Update stock based on invoice type
-        let qty_change = if invoice_type == "Sale" { qty } else { -qty };
+        let cart_item = stmt
+            .query_row(params![cart_item_id], |row| {
+                Ok((
+                    row.get::<_, i32>(0)?, // stock_id
+                    row.get::<_, f64>(1)?, // qty
+                    row.get::<_, i32>(2)?, // invoice_id
+                ))
+            })
+            .map_err(|_| "Cart item not found".to_string())?;
+
+        let (stock_id, qty, invoice_id) = cart_item;
+
+        // Step 2: Get invoice type
+        let mut stmt = conn
+            .prepare("SELECT type FROM invoices WHERE id = ?1")
+            .map_err(|e| e.to_string())?;
+
+        let invoice_type: String = stmt
+            .query_row(params![invoice_id], |row| row.get(0))
+            .map_err(|_| "Invoice not found".to_string())?;
+
+        // Step 3: Adjust stock based on invoice type
+        let qty_change = if invoice_type == "Sale" {
+            qty // add back to stock
+        } else {
+            -qty // subtract from stock
+        };
+
         conn.execute(
             "UPDATE stock SET qty = qty + ?1 WHERE id = ?2",
             params![qty_change, stock_id],
-        ).map_err(|e| e.to_string())?;
+        )
+        .map_err(|e| e.to_string())?;
+
+        // Step 4: Delete cart item
+        conn.execute("DELETE FROM cart WHERE id = ?1", params![cart_item_id])
+            .map_err(|e| e.to_string())?;
 
         // Commit transaction
         conn.execute("COMMIT", []).map_err(|e| e.to_string())?;
 
-        Ok(result)
+        Ok(1)
     })
     .await
     .map_err(|e| format!("Task join error: {}", e))?
 }
+
 
 #[tauri::command]
 pub async fn create_new_invoice(

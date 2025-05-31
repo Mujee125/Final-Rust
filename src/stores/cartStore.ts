@@ -1172,14 +1172,11 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   deleteCartItem: async (product: Product) => {
     try {
-      const { invoice } = get();
       await invoke("remove_cart_item", {
-        cartItemId: product.id,
-        stockId: product.id,
-        qty: product.qty,
-        invoiceType: invoice.type,
+        cartItemId: product.id, // Only pass the cart item ID
       });
 
+      // Refresh data after deletion
       await get().fetchCartItems();
       await get().fetchItems();
       get().updateCalculations();
@@ -1343,8 +1340,11 @@ export const useCartStore = create<CartState>((set, get) => ({
 
     if (id) {
       try {
-        const invoice = await invoke<Invoice>("fetch_invoice_by_id", { id });
+        const invoice = await invoke<Invoice>("fetch_invoice_with_items", {
+          id,
+        });
         await get().setInvoice(invoice);
+        console.log("invoice in cart store", invoice);
       } catch (error) {
         console.error("Error fetching invoice:", error);
       }

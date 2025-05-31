@@ -209,6 +209,10 @@ pub fn get_invoice_by_id(conn: &Connection, invoice_id: i32) -> Result<FullInvoi
     })
 }
 
+
+
+
+
 // pub fn get_invoice_with_items(conn: &Connection, id: i32) -> Result<InvoiceWithItems> {
 //     // Get invoice
 //     let mut stmt = conn.prepare(

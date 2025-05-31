@@ -31,7 +31,7 @@ const { initializeData } = useCartStore();
       const [, navigate] = useLocation();
 
   const fetchInvoiceForCart = async (invoiceId: number) => {
-    navigate(`/cart/${invoiceId}`);
+    navigate(`/cart`);
     await initializeData(invoiceId);
     
   };
