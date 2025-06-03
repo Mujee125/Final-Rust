@@ -1,0 +1,298 @@
+
+@font-face {
+  font-family: "Roboto-Condensed";
+  src: url("./assets/fonts/RobotoCondensed-Medium.ttf");
+}
+@import "tailwindcss/preflight";
+@tailwind utilities;
+
+@import "tailwindcss";
+
+/* Google fonts */
+.font-regular {
+    font-family: "Roboto-Condensed", sans-serif;
+    font-optical-sizing: auto;
+    font-style: normal;
+  }
+
+input[type="number"] {
+    appearance: textfield;
+}
+
+/* For Chrome, Safari, Edge, Opera */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* For Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+
+
+
+/* Ensure the top bar and sidebar are fixed */
+body, html {
+    overflow: hidden;
+}
+
+#app {
+    display: flex;
+    height: 100vh;
+}
+
+#content-area {
+    height: calc(100vh); /* Assuming the top bar height is 64px */
+    overflow-y: auto; /* Allow scrolling within the main content area */
+    padding: 8px;
+}
+
+/* Style adjustments for consistency */
+.text-gray-800 {
+    color: #2d3748;
+}
+.text-gray-600 {
+    color: #718096;
+}
+
+:root {
+    /* Light Theme */
+    --primary-bg-color: #f3f9f3; /* soft minty white */
+    --secondary-bg-color: #ffffff; /* crisp white for content areas */
+    --primary-text-color: #34495e; /* dark slate gray for primary text */
+    --secondary-text-color: #7f8c8d; /* medium gray for secondary text */
+    --border-color: #e5e7eb; /* light gray for borders */
+    --highlight-color: #2cb82c; /* vibrant lime green for highlights */
+
+    /* Button & Interactive Elements */
+    --button-bg-color: #2cb82c; /* bold lime green for buttons */
+    --button-text-color: #ffffff; /* white text on buttons */
+    --button-hover-bg-color: #1f9c23; /* darker lime green on hover */
+
+    /* Dark Theme */
+    --primary-bg-color-dark: #2c3e50; /* dark slate for dark mode background */
+    --secondary-bg-color-dark: #34495e; /* muted blue-gray for content */
+    --primary-text-color-dark: #ecf0f1; /* light grayish white text */
+    --secondary-text-color-dark: #bdc3c7; /* soft light gray for secondary text */
+    --border-color-dark: #7f8c8d; /* muted gray for borders in dark mode */
+    --highlight-color-dark: #2cb82c; /* lime green for highlights in dark mode */
+
+    /* Button & Interactive Elements (Dark) */
+    --button-bg-color-dark: #1f9c23; /* darker lime green for dark mode buttons */
+    --button-text-color-dark: #ffffff; /* white text */
+    --button-hover-bg-color-dark: #2cb82c; /* even darker lime on hover */
+}
+
+img {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+ .border-light {
+        border: 1px solid var(--border-color);
+    }
+
+@layer utilities {
+    /* Light Theme Utilities */
+    .bg-primary {
+        background-color: var(--primary-bg-color);
+    }
+    .bg-secondary {
+        background-color: var(--secondary-bg-color);
+    }
+    .text-primary {
+        color: var(--primary-text-color);
+    }
+    .text-secondary {
+        color: var(--secondary-text-color);
+    }
+   
+    .border-custom {
+        border-color: var(--border-color);
+    }
+    .highlight {
+        color: var(--highlight-color);
+    }
+    .accent-1 {
+        color: var(--accent-color-1);
+    }
+    .accent-2 {
+        color: var(--accent-color-2);
+    }
+    .accent-3 {
+        color: var(--accent-color-3);
+    }
+    .accent-4 {
+        color: var(--accent-color-4);
+    }
+    .accent-5 {
+        color: var(--accent-color-5);
+    }
+    .accent-6 {
+        color: var(--accent-color-6);
+    }
+
+    /* Dark Mode Utilities */
+    .dark-mode .bg-primary {
+        background-color: var(--primary-bg-color-dark);
+    }
+    .dark-mode .bg-secondary {
+        background-color: var(--secondary-bg-color-dark);
+    }
+    .dark-mode .text-primary {
+        color: var(--primary-text-color-dark);
+    }
+    .dark-mode .text-secondary {
+        color: var(--secondary-text-color-dark);
+    }
+    .dark-mode .border-custom {
+        border-color: var(--border-color-dark);
+    }
+    .dark-mode .highlight {
+        color: var(--highlight-color-dark);
+    }
+    .dark-mode .accent-1 {
+        color: var(--accent-color-1-dark);
+    }
+    .dark-mode .accent-2 {
+        color: var(--accent-color-2-dark);
+    }
+    .dark-mode .accent-3 {
+        color: var(--accent-color-3-dark);
+    }
+    .dark-mode .accent-4 {
+        color: var(--accent-color-4-dark);
+    }
+    .dark-mode .accent-5 {
+        color: var(--accent-color-5-dark);
+    }
+    .dark-mode .accent-6 {
+        color: var(--accent-color-6-dark);
+    }
+}
+
+[v-cloak] {
+    display: none;
+}
+
+
+
+
+
+
+
+
+/* ----------Light Theme Styles---------- */
+body {
+    background-color: var(--primary-bg-color);
+    color: var(--primary-text-color);
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: var(--primary-bg-color);
+    border-right: 1px solid var(--border-color);
+}
+
+.activeLink {
+    background-color: var(--highlight-color);
+}
+
+/* Topbar */
+.topbar {
+    background-color: var(--primary-bg-color);
+    color: var(--primary-text-color);
+    border-bottom: 1px solid var(--border-color);
+}
+.topbar .search {
+    height: 32px;
+    width: 600px;
+    background-color: var(--secondary-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+/* Tables */
+.lefttable {
+    display: block;
+    width: 65%;
+    max-height: calc(100vh - 4rem);
+}
+table {
+    background-color: var(--primary-bg-color);
+}
+
+
+/* Forms */
+.rightform {
+    width: 33.5%;
+}
+.buttons {
+    padding: 6px 12px;
+    border-radius: 3px;
+}
+.settings .buttons {
+    width: 40%;
+}
+.limebtn {
+    color: var(--button-text-color);
+    background-color: var(--button-bg-color);
+}
+.limebtn:hover {
+    background-color: var(--button-hover-bg-color);
+}
+.topbtn {
+    width: 200px !important;
+}
+.loginbtn {
+    width: 100% !important;
+}
+
+
+
+
+
+/* Default Light Theme Scrollbars */
+:root {
+    --scrollbar-bg: #e2e8f0; /* light scrollbar background */
+    --scrollbar-thumb: #a0aec0; /* light scrollbar thumb color */
+    --scrollbar-thumb-hover: #4a5568; /* dark hover color */
+}
+
+/* Dark Theme Scrollbars */
+[data-theme='dark'] {
+    --scrollbar-bg: #2d3748; /* dark scrollbar background */
+    --scrollbar-thumb: #4a5568; /* dark scrollbar thumb color */
+    --scrollbar-thumb-hover: #a0aec0; /* light hover color */
+}
+
+::-webkit-scrollbar {
+    width: 6px; /* Width of the vertical scrollbar */
+    height: 6px; /* Height of the horizontal scrollbar */
+}
+
+::-webkit-scrollbar-track {
+    background: var(--scrollbar-bg); /* Background of the scrollbar track */
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb); /* Scrollbar thumb (the draggable part) */
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover); /* Hover effect for the scrollbar thumb */
+}
+
+/* Firefox scrollbar styling */
+/* scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg);
+scrollbar-width: thin; */
