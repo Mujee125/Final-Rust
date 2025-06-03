@@ -26,7 +26,8 @@
     "windows": {
       "nsis": {
         "installerIcon": "./icons/icon.ico",
-        "headerImage": "./icons/zostickpos_installer.bmp"
+        "headerImage": "./icons/zostickpos_installer.bmp",
+        "installMode": "both"
       },
       "webviewInstallMode": {
         "silent": true,

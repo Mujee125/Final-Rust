@@ -35,13 +35,19 @@ fn get_database_path(app_handle: &tauri::AppHandle) -> Result<PathBuf> {
 
 pub fn establish_connection(app: &AppHandle) -> Result<Connection> {
     let db_path = get_database_path(app)?;
-    let conn = Connection::open(db_path)?;
+    println!("Database path: {:?}", db_path); 
+    let conn = Connection::open(db_path).map_err(|e| {
+        println!("Failed to open DB: {}", e); // Log detailed error
+        e
+    })?;
+    
     conn.execute("PRAGMA foreign_keys = ON;", [])?;
     Ok(conn)
 }
 
 pub fn initialize_database(app: &AppHandle) -> Result<()> {
     let conn = establish_connection(app)?;
+    
     for table_sql in CREATE_TABLES.iter() {
         conn.execute(table_sql, [])?;
     }

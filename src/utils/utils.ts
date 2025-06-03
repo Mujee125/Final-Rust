@@ -1,5 +1,4 @@
-import { initializeShopStore } from "../stores/shopStore";
-import { initializeUserStore } from "../stores/userStore";
+
 
 export async function convertFileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {

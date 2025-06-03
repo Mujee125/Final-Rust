@@ -129,7 +129,7 @@ export interface User {
   username: string;
   email: string;
   password: string;
-  image?: Blob;
+  image?: string | null;
   status?: number;
   person_id?: number;
   first_login?: boolean;

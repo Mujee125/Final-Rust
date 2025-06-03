@@ -1,7 +1,9 @@
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
 
-await invoke("initialize_db");
+(async () => {
+  await invoke("initialize_db");
+})();
 export interface Person {
   id: number;
   name: string;

@@ -54,9 +54,11 @@ export default function Setting() {
 
         <UserSettings
           user={{
+            id: authUser?.id ?? 0,
             email: authUser?.email || "",
             username: authUser?.username || "",
             image: authUser?.image || null,
+            password: authUser?.password || "",
           }}
           userImagePreview={userImagePreview}
           setUser={setUser}

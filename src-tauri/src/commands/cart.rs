@@ -65,7 +65,7 @@ pub async fn add_cart_item(
         }).optional().map_err(|e| e.to_string())?;
 
         let qty_change: f64;
-        if let Some((cart_id, old_qty)) = existing {
+        if let Some((cart_id, _ )) = existing {
             // Update existing cart item
             conn.execute(
                 "UPDATE cart SET qty = qty + 1 WHERE id = ?1",
