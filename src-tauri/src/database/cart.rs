@@ -24,9 +24,7 @@ pub fn insert_cart_item(conn: &Connection, item: &CartItem) -> Result<usize> {
 //     )
 // }
 
-pub fn delete_cart_item(conn: &Connection, id: i32) -> Result<usize> {
-    conn.execute("DELETE FROM cart WHERE id = ?1", params![id])
-}
+
 
 pub fn get_cart_items(conn: &Connection, invoice_id: i32) -> Result<Vec<Product>> {
     let mut stmt = conn.prepare(
@@ -62,6 +60,10 @@ pub fn get_cart_items(conn: &Connection, invoice_id: i32) -> Result<Vec<Product>
     Ok(items.filter_map(Result::ok).collect())
 }
 
+
+
+
+
 pub fn create_invoice(conn: &Connection, invoice: &CartInvoice) -> Result<i32> {
     conn.execute(
         "INSERT INTO invoices (
@@ -86,14 +88,16 @@ pub fn create_invoice(conn: &Connection, invoice: &CartInvoice) -> Result<i32> {
 
 pub fn update_invoice(conn: &Connection, invoice: &CartInvoice) -> Result<usize> {
     conn.execute(
-        "UPDATE invoices SET 
-            discount = ?1, tax = ?2, received = ?3, remarks = ?4
-         WHERE id = ?5",
+        "UPDATE invoices SET \
+            reference = ?1, discount = ?2, tax = ?3, received = ?4, remarks = ?5, person_id = ?6\
+         WHERE id = ?7",
         params![
+            invoice.reference,
             invoice.discount,
             invoice.tax,
             invoice.received,
             invoice.remarks,
+            invoice.person_id,
             invoice.id.unwrap(),
         ],
     )
@@ -127,12 +131,19 @@ pub fn get_recent_invoices(conn: &Connection) -> Result<Vec<RecentInvoice>> {
 
 pub fn calculate_cart_summary(conn: &Connection, invoice_id: i32) -> Result<CartSummary> {
     // Calculate total
-    let total: f64 = conn.query_row(
-        "SELECT SUM(qty * price) FROM cart WHERE invoice_id = ?1",
-        params![invoice_id],
-        |row| row.get(0),
-    )?;
-
+    // let total: f64 = conn.query_row(
+    //     "SELECT SUM(qty * price) FROM cart WHERE invoice_id = ?1",
+    //     params![invoice_id],
+    //     |row| row.get(0),
+    // )?;
+let total: f64 = conn.query_row(
+    "SELECT SUM(qty * price) FROM cart WHERE invoice_id = ?1",
+    params![invoice_id],
+    |row| {
+        let val: Option<f64> = row.get(0)?;
+        Ok(val.unwrap_or(0.0))
+    },
+)?;
     // Get invoice details
     let invoice: CartInvoice = conn.query_row(
         "SELECT discount, tax, received FROM invoices WHERE id = ?1",
@@ -168,3 +179,36 @@ pub fn calculate_cart_summary(conn: &Connection, invoice_id: i32) -> Result<Cart
         balance,
     })
 }
+
+
+
+
+pub fn get_invoices_by_initialize(conn: &rusqlite::Connection, id: i32) -> rusqlite::Result<Vec<InvoiceInitialize>> {
+    let mut stmt = conn.prepare(
+        "SELECT id, invoice_no, reference, type, date, discount, tax, 
+                received, remarks, person_id, user_id 
+         FROM invoices 
+         WHERE id = ?1"
+    )?;
+
+    let invoices_iter = stmt.query_map(params![id], |row| {
+        Ok(InvoiceInitialize {
+            id: row.get(0)?,
+            invoice_no: row.get(1)?,
+            reference: row.get(2)?,
+            invoice_type: row.get(3)?,
+            date: row.get(4)?,
+            discount: row.get(5)?,
+            tax: row.get(6)?,
+            received: row.get(7)?,
+            remarks: row.get(8)?,
+            person_id: row.get(9)?,
+            user_id: row.get(10)?,
+        })
+    })?;
+
+    let invoices = invoices_iter.filter_map(Result::ok).collect();
+
+    Ok(invoices)
+}
+

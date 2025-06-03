@@ -35,7 +35,7 @@ const ActiveLink = ({ href, page }: ActiveLinkProps) => {
 
   return (
     <Link href={href}>
-      <a className="flex flex-col items-center justify-center w-full h-20">
+      <span className="flex flex-col items-center justify-center w-full h-20">
         <span
           className={`size-12 mb-1 flex items-center justify-center rounded-md shadow-md bg-gray-300 ${
             isActive ? "bg-green-300" : "hover:bg-green-200"
@@ -48,7 +48,7 @@ const ActiveLink = ({ href, page }: ActiveLinkProps) => {
           />
         </span>
         <span className="text-xs">{textMap[page]}</span>
-      </a>
+      </span>
     </Link>
   );
 };

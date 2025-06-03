@@ -14,7 +14,7 @@ import Persons from "./modules/Persons";
 import StockManagement from "./modules/StockManagement";
 import InvoicePage from "./modules/InvoicePage";
 import Setting from "./modules/Setting";
-import { initializeSettingsStore } from "./stores/settingsStore";
+import { initializeShopStore } from "./stores/shopStore";
 import { useAuthStore } from "./stores/authStore";
 
 function App() {
@@ -27,7 +27,7 @@ function App() {
 
   useEffect(() => {
     loadSession(navigate);
-    initializeSettingsStore();
+    initializeShopStore();
   }, []);
 
   // Redirect to /login if not logged in

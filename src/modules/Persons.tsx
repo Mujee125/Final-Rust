@@ -10,7 +10,7 @@ import {
   FaPlusCircle,
 } from "react-icons/fa";
 import ExtendableDropdown from "../components/ExtendableDropdown";
-// import { useCartStore } from "../stores/cartStore";
+import { useCartStore } from "../stores/cartStore";
 import { useLocation } from "wouter";
 import { FaBox, FaUsers } from "react-icons/fa6";
 import CSVUploader from "../components/CSVUploader";
@@ -35,14 +35,14 @@ const Persons: React.FC = () => {
     downloadPDF,
   } = usePersonsStore();
 
-  // const { initializeData } = useCartStore();
+  const { initializeData } = useCartStore();
 
   const [, setLocation] = useLocation();
 
-  // const fetchInvoiceForCart = async (invoiceId: number) => {
-  //   setLocation(`/cart`);
-  //   await initializeData(invoiceId);
-  // };
+  const fetchInvoiceForCart = async (invoiceId: number) => {
+    setLocation(`/cart`);
+    await initializeData(invoiceId);
+  };
 
   useEffect(() => {
     fetchPersons();
@@ -359,7 +359,7 @@ const Persons: React.FC = () => {
                   
                   text-blue-500 hover:text-blue-700 text-sm"
                   >
-                    {/* <button
+                    <button
                       onClick={() => {
                         fetchInvoiceForCart(invoice.id);
                       }}
@@ -367,7 +367,7 @@ const Persons: React.FC = () => {
                       className="text-blue-500 hover:text-blue-700 cursor-pointer"
                     >
                       <FaEdit />
-                    </button> */}
+                    </button>
                   </td>
                 </tr>
               ))}

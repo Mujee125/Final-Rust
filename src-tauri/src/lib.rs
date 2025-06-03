@@ -88,6 +88,10 @@ pub fn run() {
             fetch_recent_invoices,
             calculate_cart_summary_command,
             checkout_invoice,
+            get_cart_item,
+            get_max_invoice_id,
+            fetch_invoice_for_initialize,
+
 
             // Settings commands
             get_shop_settings,
@@ -114,9 +118,10 @@ pub fn run() {
 
             // invoice
             fetch_invoices,
-            //fetch_invoice_by_id,
+            fetch_invoice_with_items_for_invoice,
             fetch_invoice_with_items,
             delete_invoice_cmd,
+            fetch_invoice_detail_by_id,
             
         ])
         .run(tauri::generate_context!())

@@ -2,9 +2,10 @@
 
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
+import { useCartStore } from "./cartStore";
 
 export interface Invoice {
-  id?: number;
+  id?: string;
   invoice_no: string;
   type: string;
   date: string;
@@ -22,7 +23,7 @@ export interface Invoice {
 }
 
 interface InvoiceItem {
-  id?: number;
+  id?: string
   invoice_id?: number;
   product_id?: number;
   name: string;
@@ -32,6 +33,7 @@ interface InvoiceItem {
   price: number;
   discount: number;
 }
+
 
 interface InvoiceState {
   data: Invoice[];
@@ -70,7 +72,7 @@ const initialInvoiceState: Omit<
   loading: false,
   error: null,
   invoice: {
-    id: undefined,
+    id: "",
     invoice_no: "",
     date: "",
     discount: 0,
@@ -86,6 +88,7 @@ const initialInvoiceState: Omit<
     total: 0,
   },
 };
+
 
 export const useInvoiceStore = create<InvoiceState>()((set, get) => ({
   ...initialInvoiceState,
@@ -111,6 +114,7 @@ export const useInvoiceStore = create<InvoiceState>()((set, get) => ({
           error: "No invoices found",
         });
       }
+   
     } catch (error) {
       console.error("Error fetching invoices:", error);
       set({
@@ -120,6 +124,8 @@ export const useInvoiceStore = create<InvoiceState>()((set, get) => ({
         }`,
       });
     }
+  
+  
   },
 
   selectInvoice: async (inv: Invoice) => {
@@ -128,11 +134,12 @@ export const useInvoiceStore = create<InvoiceState>()((set, get) => ({
       const invoiceWithItems = await invoke<{
         invoice: Invoice;
         items: InvoiceItem[];
-      }>("fetch_invoice_with_items", { id: inv.id });
+      }>("fetch_invoice_with_items_for_invoice", { id: inv.id });
 
       set({
-        invoice: invoiceWithItems.invoice,
-        invoiceItems: invoiceWithItems.items,
+        
+        invoice: invoiceWithItems.invoice ?? initialInvoiceState.invoice,
+        invoiceItems: invoiceWithItems.items ?? [],
         loading: false,
       });
     } catch (error) {
@@ -241,10 +248,12 @@ export const useInvoiceStore = create<InvoiceState>()((set, get) => ({
       await invoke("delete_invoice_cmd", { id: invoice.id });
       await fetchTableData();
       set({ invoice: initialInvoiceState.invoice });
+   
     } catch (error) {
       console.error("Error deleting invoice:", error);
       throw error;
     }
+    
   },
 
   setInvoice: (invoice: Partial<Invoice>) => {

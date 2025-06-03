@@ -48,7 +48,7 @@ const Receipt: React.FC<ReceiptProps> = ({
   net,
 }) => {
   // Format the date by splitting at 'T' and taking the first part
-  const formattedDate = invoice.date.split("T")[0];
+  const formattedDate = (invoice.date || '').split("T")[0];
 
   return (
     <div className="w-[250px] mx-auto text-xs font-mono text-center bg-gray-50 px-0 py-1">
@@ -85,7 +85,7 @@ const Receipt: React.FC<ReceiptProps> = ({
                 <td className="p-1 text-right">{item.qty}</td>
                 <td className="p-1 text-right">{item.price}</td>
                 <td className="p-1 text-right">
-                  {(item.qty * item.price)}
+                  {isNaN(item.qty * item.price) ? "0" : (item.qty * item.price)}
                 </td>
               </tr>
             ))}
@@ -97,24 +97,24 @@ const Receipt: React.FC<ReceiptProps> = ({
           <tbody>
             <tr>
               <td className="p-1 text-right text-gray-700">Discount (Rs.):</td>
-              <td className="p-1 text-right">{discountRS}</td>
+              <td className="p-1 text-right">{isNaN(discountRS) ? "0" : discountRS}</td>
             </tr>
             <tr>
               <td className="p-1 text-right text-gray-700">Tax (Rs.):</td>
-              <td className="p-1 text-right">{taxRS}</td>
+              <td className="p-1 text-right">{isNaN(taxRS) ? "0" : taxRS}</td>
             </tr>
             <tr className="font-bold border-t border-gray-400">
               <td className="p-1 text-right">Net Total (Rs.):</td>
-              <td className="p-1 text-right">{total}</td>
+              <td className="p-1 text-right">{isNaN(total) ? "0" : total}</td>
             </tr>
             <tr>
               <td className="p-1 text-right text-gray-700">Paid (Rs.):</td>
-              <td className="p-1 text-right">{invoice.received}</td>
+              <td className="p-1 text-right">{isNaN(invoice.received) ? "0" : invoice.received}</td>
             </tr>
             <tr>
               <td className="p-1 text-right text-gray-700">Balance (Rs.):</td>
               <td className="p-1 text-right">
-                {(net - invoice.received)}
+                {isNaN(net - invoice.received) ? "0" : (net - invoice.received)}
               </td>
             </tr>
           </tbody>

@@ -1,5 +1,4 @@
-
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef} from "react";
 import {
   FaShoppingCart,
   FaReceipt,
@@ -18,7 +17,7 @@ import { FaXmark } from "react-icons/fa6";
 import { useCartStore } from "../stores/cartStore";
 import { Link } from "wouter";
 import Invoice from "../components/Invoice";
-import { useSettingsStore } from "../stores/settingsStore";
+import { useShopStore } from "../stores/shopStore";
 import { useAuthStore } from "../stores/authStore";
 import Receipt from "../components/Receipt";
 
@@ -27,6 +26,7 @@ const CartManagement = () => {
   const componentRef = useRef<HTMLDivElement>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
   const {
+    invoiceId,
     isBarcodeMode,
     searchItemQuery,
     searchPersonQuery,
@@ -36,7 +36,11 @@ const CartManagement = () => {
     person,
     cartItems,
     recentInvoices,
- 
+   
+    total,
+    discountRS,
+    taxRS,
+    net,
     changeInvoiceType,
     searchItems,
     searchPersons,
@@ -56,19 +60,7 @@ const CartManagement = () => {
     updateCalculations,
   } = useCartStore();
 
-  const [calculationData, setCalculationData] = useState({
-    total: 0,
-    discountRS: 0,
-    taxRS: 0,
-    net: 0,
-    balance: 0,
-  });
-
-  useEffect(() => {
-    const result = updateCalculations?.();
-    if (result !== undefined) setCalculationData(result);
-  }, [cartItems, invoice]);
-  const { shop } = useSettingsStore();
+  const { shop } = useShopStore();
   const { user } = useAuthStore();
 
   useEffect(() => {
@@ -92,9 +84,18 @@ const CartManagement = () => {
 
   const printAndCheckout = async () => {
     await handlePrintReceipt();
-    checkOut();
+    // checkOut();
   };
   
+  const calculateLocalTotals = () => {
+    const total = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
+    const discountRS = (total * (invoice.discount || 0)) / 100;
+    const taxRS = ((total - discountRS) * (invoice.tax || 0)) / 100;
+    const net = total - discountRS + taxRS;
+    const balance = net - (invoice.received || 0);
+    return { total, discountRS, taxRS, net, balance };
+  };
+  const { discountRS: localDiscountRS, taxRS: localTaxRS, net: localNet, balance: localBalance, total: localTotal } = calculateLocalTotals();
 
   return (
     <div className="col-span-3 grid grid-cols-1 sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-2 overflow-y-auto">
@@ -125,7 +126,6 @@ const CartManagement = () => {
               <div>
                 <span>
                   <label className="text-gray-800 text-sm">Ref. No. :</label>
-                  &nbsp;
                   <input
                     title="Reference No."
                     type="text"
@@ -308,7 +308,7 @@ const CartManagement = () => {
                       <td className="py-2 px-4 text-sm">{product.unit}</td>
                       <td className="py-2 px-4 text-sm">{product.price}</td>
                       <td className="py-2 px-4  text-sm">
-                        {product.price * product.qty}
+                        {(product.price * product.qty).toFixed(0)}
                       </td>
                       <td className="py-2 px-4 text-sm">{product.location}</td>
                       <td
@@ -505,7 +505,9 @@ const CartManagement = () => {
                       <td className="p-1  ">{inv.invoice_type}</td>
                       <td className="p-1  ">{inv.date}</td>
                       <td className="p-1  ">{inv.person}</td>
-                      <td className="p-1  ">{inv.total ? inv.total : "0"}</td>
+                      <td className="p-1  ">
+                        {inv.total ? inv.total.toFixed(0) : "0"}
+                      </td>
                       <td className="border-b border-gray-200 text-center text-blue-500 hover:text-blue-700 text-sm">
                         <button
                           title="Edit Invoice"
@@ -529,13 +531,14 @@ const CartManagement = () => {
         {/* Discount Input Percent */}
         <div>
           <input
-            value={invoice.discount}
-            onChange={(e) =>
+            value={invoiceId ? invoice.discount : 0}
+            onChange={(e) => {
               setInvoice({
                 ...invoice,
                 discount: parseFloat(e.target.value) || 0,
-              })
-            }
+              });
+              updateCalculations();
+            }}
             type="text"
             className="w-full p-2 text-xl text-center  border-2 border-green-400 rounded-md shadow-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Enter Discount"
@@ -550,10 +553,11 @@ const CartManagement = () => {
         {/* Tax Input Percent */}
         <div className="mb-2">
           <input
-            value={invoice.tax}
-            onChange={(e) =>
-              setInvoice({ ...invoice, tax: parseFloat(e.target.value) || 0 })
-            }
+            value={parseFloat((invoice.tax ?? 0).toFixed(0))}
+            onChange={(e) => {
+              setInvoice({ ...invoice, tax: parseFloat(e.target.value) || 0 });
+              updateCalculations();
+            }}
             type="text"
             id="productTax"
             className="w-full p-2 text-xl text-center  border-2 border-orange-400 rounded-md shadow-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -567,12 +571,13 @@ const CartManagement = () => {
         <div>
           <input
             value={invoice.received}
-            onChange={(e) =>
+            onChange={(e) => {
               setInvoice({
                 ...invoice,
                 received: parseFloat(e.target.value) || 0,
-              })
-            }
+              });
+              updateCalculations();
+            }}
             type="number"
             id="cashReceived"
             className="w-full p-2 text-xl text-center  border-2 border-blue-400 rounded-md shadow-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -595,7 +600,7 @@ const CartManagement = () => {
             id="netAmount"
             className="w-full p-2 text-xl text-center border-light rounded-md shadow-md bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Net Amount"
-            value={calculationData.net}
+            value={localNet.toFixed(0)}
             disabled
           />
           <label htmlFor="netAmount" className="block text-sm font-medium">
@@ -624,7 +629,7 @@ const CartManagement = () => {
         <div>
           <input
             type="text"
-            value={calculationData.discountRS}
+            value={localDiscountRS.toFixed(0)}
             className="w-full p-2 text-xl text-center border-light bg-green-100 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Enter Discount"
             disabled
@@ -639,7 +644,7 @@ const CartManagement = () => {
         {/* Tax Input */}
         <div className="mb-2">
           <input
-            value={calculationData.taxRS}
+            value={localTaxRS.toFixed(0)}
             type="text"
             id="productTaxRS"
             className="w-full p-2 text-xl text-center border-light bg-orange-100 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -653,7 +658,7 @@ const CartManagement = () => {
         {/* Balance Amount */}
         <div>
           <input
-            value={calculationData.balance}
+            value={localBalance.toFixed(0)}
             type="text"
             id="balanceAmount"
             className="w-full p-2 text-xl text-center border-light rounded-md shadow-md bg-green-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -685,7 +690,7 @@ const CartManagement = () => {
             id="totalAmount"
             className="w-full p-2 text-xl text-center border-light rounded-md shadow-md bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Total Amount"
-            value={calculationData.total}
+            value={localTotal.toFixed(0)}
             disabled
           />
           <label htmlFor="totalAmount" className="block text-sm font-medium">
@@ -715,10 +720,10 @@ const CartManagement = () => {
             person={person}
             username={user?.username ?? ""}
             cartItems={cartItems}
-            discountRS={calculationData.discountRS}
-            taxRS={calculationData.taxRS}
-            total={calculationData.total}
-            net={calculationData.net}
+            discountRS={parseFloat(localDiscountRS.toFixed(0))}
+            taxRS={parseFloat(localTaxRS.toFixed(0))}
+            total={parseFloat(localNet.toFixed(0))}
+            net={parseFloat(localNet.toFixed(0))}
           />
         </div>
       </div>
@@ -740,10 +745,10 @@ const CartManagement = () => {
               unitPrice: item.price,
               total: item.qty * item.price,
             }))}
-            total={calculationData.total}
-            taxRS={calculationData.taxRS}
-            discountRS={calculationData.discountRS}
-            net={calculationData.net}
+            total={total}
+            taxRS={taxRS}
+            discountRS={discountRS}
+            net={net}
           />
         </div>
       </div>

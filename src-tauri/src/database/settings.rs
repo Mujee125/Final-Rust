@@ -15,10 +15,11 @@ pub fn get_shop_settings(conn: &Connection) -> Result<Option<ShopSettings>> {
             id: row.get(0)?,
             name: row.get(1)?,
             description: row.get(2)?,
-            address: row.get(3)?,
-            contact: row.get(4)?,
-            email: row.get(5)?,
-            website: row.get(6)?,
+            
+            contact: row.get(3)?,
+            email: row.get(4)?,
+            website: row.get(5)?,
+            address: row.get(6)?,
             image: row.get(7)?,
         })
     })?;
@@ -70,9 +71,12 @@ pub fn save_shop_settings(conn: &Connection, shop: &ShopSettings) -> Result<usiz
 pub fn get_user_settings(conn: &Connection) -> Result<Option<UserSettings>> {
     let mut stmt = conn.prepare("SELECT * FROM users LIMIT 1")?;
     let mut rows = stmt.query_map([], |row| {
-        let created_at: Option<String> = row.get(7)?;
-        let updated_at: Option<String> = row.get(8)?;
-
+        let first_login_int: Option<i32> = row.get(7)?; // ✅ first_login
+        let created_at: Option<String> = row.get(8)?;   // ✅ created_at
+        let updated_at: Option<String> = row.get(9)?;   // ✅ updated_at
+    
+        let first_login = first_login_int.map(|val| val != 0); // convert to bool
+    
         Ok(UserSettings {
             id: row.get(0)?,
             username: row.get(1)?,
@@ -81,21 +85,26 @@ pub fn get_user_settings(conn: &Connection) -> Result<Option<UserSettings>> {
             image: row.get(4)?,
             status: row.get(5)?,
             person_id: row.get(6)?,
+            first_login,
             created_at: parse_datetime(created_at),
             updated_at: parse_datetime(updated_at),
         })
     })?;
+    
 
     Ok(rows.next().transpose()?)
 }
 
+
 pub fn save_user_settings(conn: &Connection, user: &UserSettings) -> Result<usize> {
+    println!("Saving user: {:?}", user); // Debug log
     if let Some(id) = user.id {
-        conn.execute(
+        let rows_affected = conn.execute(
             "UPDATE users SET 
                 username = ?1, 
                 email = ?2, 
                 image = ?3 
+                
             WHERE id = ?4",
             params![
                 &user.username,
@@ -103,12 +112,17 @@ pub fn save_user_settings(conn: &Connection, user: &UserSettings) -> Result<usiz
                 &user.image,
                 id,
             ],
-        )
+        )?;
+        if rows_affected == 0 {
+            Err(rusqlite::Error::QueryReturnedNoRows)
+        } else {
+            Ok(rows_affected)
+        }
     } else {
         conn.execute(
             "INSERT INTO users (
                 username, email, image
-            ) VALUES (?1, ?2, ?3)",
+            )  (?1, ?2, ?3)",
             params![
                 &user.username,
                 &user.email,
@@ -117,3 +131,4 @@ pub fn save_user_settings(conn: &Connection, user: &UserSettings) -> Result<usiz
         )
     }
 }
+

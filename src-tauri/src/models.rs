@@ -2,38 +2,86 @@ use serde::{Deserialize, Serialize};
 use chrono::{NaiveDate, NaiveDateTime};
 use rusqlite::Row;
 
-#[derive(Serialize)]
+// // #[derive(Serialize)]
+// // pub struct FullInvoiceItem {
+// //     pub name: String,
+// //     pub code: String,
+// //     pub qty: f64,
+// //     pub price: f64,
+// //     pub discount: f64,
+// //     pub subtotal: f64,
+// // }
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FullInvoiceItem {
     pub name: String,
-    pub code: String,
+    pub category: String,
+    pub unit: String,
     pub qty: f64,
     pub price: f64,
     pub discount: f64,
-    pub subtotal: f64,
 }
 
-#[derive(Serialize)]
+// // #[derive(Serialize)]
+// // pub struct FullInvoice {
+// //     pub id: i32,
+// //     pub invoice_no: String,
+// //     pub reference: String,
+// //     pub type_: String,
+// //     pub date: String,
+// //     pub discount: f64,
+// //     pub received: f64,
+// //     pub tax: f64,
+// //     pub remarks: Option<String>,
+// //     pub person_id: i32,
+// //     pub user_id: i32,
+// //     pub created_at: String,
+// //     pub updated_at: String,
+// //     pub total: f64,
+// //     pub net: f64,
+// //     pub items: Vec<FullInvoiceItem>,
+// // }
+
+// // #[derive(Serialize)]
+// // pub struct FullInvoice {
+// //     pub id: i32,
+// //     pub invoice_no: String,
+// //     #[serde(rename = "type")] 
+// //     pub invoice_type: String,
+// //     pub date: String,
+// //     pub person: String,  // Person name instead of ID
+// //     pub discount_amount: f64,  // Renamed from discount
+// //     pub tax_amount: f64,  // Renamed from tax
+// //     pub received: f64,
+// //     pub user: String,  // User name instead of ID
+// //     pub remarks: Option<String>,
+// //     pub items: Vec<FullInvoiceItem>,
+// //     pub total: f64,
+// // } 
+// // #[derive(Debug, Serialize, Deserialize)]
+
+#[derive( Serialize)]
 pub struct FullInvoice {
-    pub id: i32,
+    pub id: Option<i32>,
     pub invoice_no: String,
     pub reference: String,
-    pub type_: String,
+    pub invoice_type: String,
     pub date: String,
     pub discount: f64,
     pub received: f64,
     pub tax: f64,
-    pub remarks: Option<String>,
+    pub remarks: String,
     pub person_id: i32,
+    pub person: String,
     pub user_id: i32,
-    pub created_at: String,
-    pub updated_at: String,
+    pub user: String,
     pub total: f64,
+    pub discount_amount: f64,
+    pub tax_amount: f64,
     pub net: f64,
     pub items: Vec<FullInvoiceItem>,
 }
 
-
-#[derive(Debug, Serialize, Deserialize)]
+#[derive( Serialize, Deserialize)]
 pub struct Person {
     pub id: i32,
     pub name: String,
@@ -57,11 +105,21 @@ pub struct NewPerson {
     pub remarks: Option<String>,
 }
 
+// // #[derive(Debug, Serialize, Deserialize)]
+// // pub struct PersonInvoice {
+// //     pub id: i32,
+// //     pub invoice_no: String,
+// //     pub r#type: String,
+// //     pub date: String,
+// //     pub total: f64,
+// // }
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PersonInvoice {
     pub id: i32,
     pub invoice_no: String,
-    pub r#type: String,
+    #[serde(rename = "type")]  // To match TypeScript's "type" field
+    pub invoice_type: String,  // Changed from r#type to invoice_type for clarity
     pub date: String,
     pub total: f64,
 }
@@ -217,19 +275,20 @@ pub struct CartSummary {
 }
 
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ShopSettings {
     pub id: Option<i32>,
     pub name: String,
     pub description: Option<String>,
-    pub address: Option<String>,
+    
     pub contact: Option<String>,
     pub email: Option<String>,
     pub website: Option<String>,
+    pub address: Option<String>,
     pub image: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct UserSettings {
     pub id: Option<i32>,
     pub username: String,
@@ -238,6 +297,7 @@ pub struct UserSettings {
     pub image: Option<String>,
     pub status: Option<i32>,
     pub person_id: Option<i32>,
+    pub first_login: Option<bool>,
     pub created_at: Option<NaiveDateTime>,
     pub updated_at: Option<NaiveDateTime>,
 }
@@ -282,33 +342,32 @@ pub struct Session {
 
 // impl User {
 //     pub fn from_row(row: &rusqlite::Row) -> rusqlite::Result<Self> {
-//         Ok(Self {
+//         Ok(User {
 //             id: row.get(0)?,
 //             username: row.get(1)?,
 //             email: row.get(2)?,
-//             password: row.get(3)?,
-//             image: row.get(4)?,
-//             first_login: row.get(5)?,
+//             password: row.get(3).ok(),
+//             image: row.get(4).ok(),
+//             first_login: row.get(5).ok(),
+//             status: None,
+//             person_id: None,
+//             created_at: None,
+//             updated_at: None,
 //         })
 //     }
 // }
 
 impl Session {
     pub fn from_row(row: &rusqlite::Row) -> rusqlite::Result<Self> {
-        use chrono::NaiveDateTime;
-
-        let created_at_str: Option<String> = row.get(4)?;
-        let created_at = match created_at_str {
-            Some(ref s) => NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S").ok(),
-            None => None,
-        };
-
-        Ok(Self {
+        Ok(Session {
             id: row.get(0)?,
             user_id: row.get(1)?,
             token: row.get(2)?,
             is_active: row.get(3)?,
-            created_at,
+            created_at: {
+                let s: Option<String> = row.get(4)?;
+                s.and_then(|s| NaiveDateTime::parse_from_str(&s, "%Y-%m-%d %H:%M:%S").ok())
+            },
         })
     }
 }
@@ -378,17 +437,37 @@ impl User {
 
 
 
+// // #[derive(Debug, Serialize, Deserialize)]
+// // pub struct Invoice {
+// //     pub id: Option<i32>,
+// //     pub invoice_no: String,
+// //     pub r#type: String,
+// //     pub date: NaiveDate,
+// //     pub person_id: i32,
+// //     pub discount_amount: f64,
+// //     pub tax_amount: f64,
+// //     pub received: f64,
+// //     pub user_id: i32,
+// //     pub discount: f64,
+// //     pub tax: f64,
+// //     pub remarks: String,
+// //     pub subtotal: Option<f64>,
+// //     pub total: Option<f64>,
+// //     pub items: Option<i32>,
+// // }
 #[derive(Debug, Serialize, Deserialize)]
+
 pub struct Invoice {
     pub id: Option<i32>,
     pub invoice_no: String,
-    pub r#type: String,
-    pub date: NaiveDate,
-    pub person_id: i32,
+    #[serde(rename = "type")]
+    pub invoice_type: String,
+    pub date: String,  // Changed from NaiveDate to String
+    pub person: String,  // Changed from person_id to person name
     pub discount_amount: f64,
     pub tax_amount: f64,
-    pub received: f64,
-    pub user_id: i32,
+    pub received: String,  // Changed from f64 to String
+    pub user: String,  // Changed from user_id to username
     pub discount: f64,
     pub tax: f64,
     pub remarks: String,
@@ -396,7 +475,6 @@ pub struct Invoice {
     pub total: Option<f64>,
     pub items: Option<i32>,
 }
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct InvoiceItem {
     pub id: Option<i32>,
@@ -422,3 +500,146 @@ pub struct InvoiceStats {
     pub total_sales: f64,
     pub total_purchases: f64,
 }   
+
+/* Rust Structs Below (meant for backend usage) */
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct Cart {
+    pub id: i32,
+    pub stock_id: i32,
+    pub invoice_id: i32,
+    pub qty: f64,
+    pub price: f64,
+    pub discount: Option<f64>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct Category {
+    pub id: i32,
+    pub name: String,
+}
+
+// #[derive(Debug, serde::Serialize, serde::Deserialize)]
+// pub struct Invoice {
+//     pub id: i32,
+//     pub invoice_no: String,
+//     pub reference: String,
+//     pub r#type: String,
+//     pub date: String,
+//     pub discount: Option<f64>,
+//     pub received: f64,
+//     pub tax: Option<f64>,
+//     pub remarks: Option<String>,
+//     pub person_id: i32,
+//     pub user_id: i32,
+//     pub created_at: Option<String>,
+//     pub updated_at: Option<String>,
+// }
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct Location {
+    pub id: i32,
+    pub name: String,
+}
+
+// #[derive(Debug, serde::Serialize, serde::Deserialize)]
+// pub struct Person {
+//     pub id: i32,
+//     pub name: String,
+//     pub role: String,
+//     pub contact: String,
+//     pub account: Option<String>,
+//     pub address: String,
+//     pub remarks: Option<String>,
+//     pub created_at: Option<String>,
+//     pub updated_at: Option<String>,
+// }
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct Role {
+    pub id: i32,
+    pub name: String,
+}
+
+// #[derive(Debug, serde::Serialize, serde::Deserialize)]
+// pub struct Shop {
+//     pub id: i32,
+//     pub name: Option<String>,
+//     pub description: Option<String>,
+//     pub contact: Option<String>,
+//     pub email: Option<String>,
+//     pub website: Option<String>,
+//     pub address: Option<String>,
+//     pub image: Option<Vec<u8>>,
+// }
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct Stock {
+    pub id: i32,
+    pub name: String,
+    pub code: String,
+    pub r#type: String,
+    pub category: String,
+    pub unit: String,
+    pub qty: i32,
+    pub min_qty: i32,
+    pub target_qty: i32,
+    pub sale_price: f64,
+    pub purchase_price: f64,
+    pub discount: Option<f64>,
+    pub expiry: String,
+    pub location: String,
+    pub remarks: Option<String>,
+    pub created_at: Option<String>,
+    pub updated_at: Option<String>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct TypeModel {
+    pub id: i32,
+    pub name: String,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct Unit {
+    pub id: i32,
+    pub name: String,
+}
+
+// #[derive(Debug, serde::Serialize, serde::Deserialize)]
+// pub struct Session {
+//     pub id: i32,
+//     pub user_id: String,
+//     pub token: String,
+//     pub is_active: Option<bool>,
+// }
+
+// #[derive(Debug, serde::Serialize, serde::Deserialize)]
+// pub struct User {
+//     pub id: i32,
+//     pub username: String,
+//     pub email: String,
+//     pub password: String,
+//     pub image: Option<Vec<u8>>,
+//     pub status: Option<i32>,
+//     pub person_id: Option<i32>,
+//     pub first_login: Option<bool>,
+//     pub created_at: Option<String>,
+//     pub updated_at: Option<String>,
+// }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct InvoiceInitialize {
+    pub id: i32,
+    pub invoice_no: String,
+    pub reference: Option<String>,
+    #[serde(rename = "type")]
+    pub invoice_type: String,
+    pub date: String,
+    pub discount: f64,
+    pub tax: f64,
+    pub received: f64,
+    pub remarks: Option<String>,
+    pub person_id: i32,
+    pub user_id: i32,
+}

@@ -1,22 +1,24 @@
-
-
 import { useEffect, useRef, useState } from "react";
 import { FaBars, FaPhoneAlt } from "react-icons/fa";
 import ProfileDropdown from "./ProfileDropdown";
 import placeholder2 from "../assets/img/placeholder2.jpg";
 import { useAuthStore } from "../stores/authStore";
-import { useSettingsStore } from "../stores/settingsStore";
+
+import { useShopStore } from "../stores/shopStore";
+import { useUserStore } from "../stores/userStore";
 
 function Topbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null); // Ref to handle outside click
 
-  const { user, logout } = useAuthStore();
-  const { shop, fetchShopData } = useSettingsStore();
+  const { logout } = useAuthStore();
+  const { shop, fetchShopData } = useShopStore();
+  const {user,  fetchUserData } = useUserStore();
   // Fetch shop data when component mounts
   useEffect(() => {
     fetchShopData();
-  }, [fetchShopData]);
+    fetchUserData();
+  }, [fetchShopData, fetchUserData]);
 
   const handleLogout = () => {
     logout();
@@ -83,4 +85,3 @@ function Topbar() {
 }
 
 export default Topbar;
-

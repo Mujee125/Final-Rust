@@ -27,8 +27,21 @@ pub async fn get_all_persons_command(app: tauri::AppHandle) -> Result<Vec<Person
     .map_err(|e| format!("Task join error: {}", e))?
 }
 
+// #[tauri::command]
+// pub async fn get_invoices_by_person_id_command(app: tauri::AppHandle,person_id: i32) -> Result<Vec<PersonInvoice>, String> {
+//     spawn_blocking(move || {
+//         let conn = establish_connection(&app).map_err(|e| e.to_string())?;
+//         get_invoices_by_person_id(&conn, person_id).map_err(|e| e.to_string())
+//     })
+//     .await
+//     .map_err(|e| format!("Task join error: {}", e))?
+// }
+
 #[tauri::command]
-pub async fn get_invoices_by_person_id_command(app: tauri::AppHandle,person_id: i32) -> Result<Vec<PersonInvoice>, String> {
+pub async fn get_invoices_by_person_id_command(
+    app: tauri::AppHandle,
+    person_id: i32
+) -> Result<Vec<PersonInvoice>, String> {
     spawn_blocking(move || {
         let conn = establish_connection(&app).map_err(|e| e.to_string())?;
         get_invoices_by_person_id(&conn, person_id).map_err(|e| e.to_string())

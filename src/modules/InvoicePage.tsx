@@ -54,6 +54,7 @@ const InvoicePage = () => {
   const handleDeleteInvoice = async () => {
     await deleteInvoice();
   };
+  console.log("invoice",invoice,"filteredData",filteredData)
 
   return (
     <div className={`flex overflow-hidden ${isDarkMode ? "dark-mode" : ""}`}>
@@ -144,70 +145,75 @@ const InvoicePage = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredData.map((row, rowIndex) => (
-                <tr
-                  key={rowIndex}
-                  onClick={() => handleSelectInvoice(row)}
-                  className="cursor-pointer hover:bg-gray-100 border-light"
-                >
-                  <td className="py-1 lg:py-2 px-4  text-sm">
-                    <a>
-                      <span>{row.invoice_no}</span>
-                    </a>
-                  </td>
-                  <td className="py-1 lg:py-2 px-4  text-sm">
-                    <a>
-                      <span>{row.type}</span>
-                    </a>
-                  </td>
-                  <td className="py-1 lg:py-2 px-4  text-sm">
-                    <a>
-                      <span>{row.date}</span>
-                    </a>
-                  </td>
-                  <td className="py-1 lg:py-2 px-4  text-sm">
-                    <a>
-                      <span>{row.person}</span>
-                    </a>
-                  </td>
-                  <td className="py-1 lg:py-2 px-4  text-sm">
-                    <a>
-                      <span>{row.discount_amount?.toFixed(2)}</span>
-                    </a>
-                  </td>
-                  <td className="py-1 lg:py-2 px-4  text-sm">
-                    <a>
-                      <span>{row.tax_amount?.toFixed(2)}</span>
-                    </a>
-                  </td>
-                  <td className="py-1 lg:py-2 px-4  text-sm">
-                    <a>
-                      <span>{row.received}</span>
-                    </a>
-                  </td>
-                  <td className="py-1 lg:py-2 px-4  text-sm">
-                    <a>
-                      <span>{row.user}</span>
-                    </a>
-                  </td>
-                  <td className="py-1 lg:py-2 px-4  text-blue-500 hover:text-blue-700 text-sm">
-                    {/* Edit Button */}
-                    <button
-                      onClick={() => {
-                        if (invoice.id) {
-                          fetchInvoiceForCart(Number(invoice.id));
-                        } else {
-                          console.error("Invoice ID is undefined");
-                        }
-                      }}
-                      title="Edit Invoice"
-                      className="text-blue-500 hover:text-blue-700 cursor-pointer"
+              {filteredData.map(
+                (row, rowIndex) => (
+                  console.log("row", row.invoice_no),
+                  (
+                    <tr
+                      key={rowIndex}
+                      onClick={() => handleSelectInvoice(row)}
+                      className="cursor-pointer hover:bg-gray-100 border-light"
                     >
-                      <FaEdit />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                      <td className="py-1 lg:py-2 px-4  text-sm">
+                        <a>
+                          <span>{row.invoice_no}</span>
+                        </a>
+                      </td>
+                      <td className="py-1 lg:py-2 px-4  text-sm">
+                        <a>
+                          <span>{row.type}</span>
+                        </a>
+                      </td>
+                      <td className="py-1 lg:py-2 px-4  text-sm">
+                        <a>
+                          <span>{row.date}</span>
+                        </a>
+                      </td>
+                      <td className="py-1 lg:py-2 px-4  text-sm">
+                        <a>
+                          <span>{row.person}</span>
+                        </a>
+                      </td>
+                      <td className="py-1 lg:py-2 px-4  text-sm">
+                        <a>
+                          <span>{row.discount_amount?.toFixed(2)}</span>
+                        </a>
+                      </td>
+                      <td className="py-1 lg:py-2 px-4  text-sm">
+                        <a>
+                          <span>{row.tax_amount?.toFixed(2)}</span>
+                        </a>
+                      </td>
+                      <td className="py-1 lg:py-2 px-4  text-sm">
+                        <a>
+                          <span>{row.received}</span>
+                        </a>
+                      </td>
+                      <td className="py-1 lg:py-2 px-4  text-sm">
+                        <a>
+                          <span>{row.user}</span>
+                        </a>
+                      </td>
+                      <td className="py-1 lg:py-2 px-4  text-blue-500 hover:text-blue-700 text-sm">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent row click from triggering
+                            if (row.id) {
+                              fetchInvoiceForCart(Number(row.id));
+                            } else {
+                              console.error("Invoice ID is undefined");
+                            }
+                          }}
+                          title="Edit Invoice"
+                          className="text-blue-500 hover:text-blue-700 cursor-pointer"
+                        >
+                          <FaEdit />
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                )
+              )}
             </tbody>
           </table>
         </div>
@@ -219,11 +225,11 @@ const InvoicePage = () => {
         style={{ maxHeight: "calc(100vh - 4rem)" }}
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg">
+          <h2 className="text-lg flex items-center">
             <FaPlusCircle className="highlight mr-1" />
             Invoice Details
           </h2>
-          {invoice.id && (
+          { invoice.id !== "" && (
             <div className="flex space-x-4">
               {/* Edit Button */}
               <button
@@ -259,7 +265,7 @@ const InvoicePage = () => {
               </label>
               <input
                 type="text"
-                value={invoice.invoice_no}
+                value={invoice?.invoice_no ?? ""}
                 onChange={(e) =>
                   setInvoice({ ...invoice, invoice_no: e.target.value })
                 }
