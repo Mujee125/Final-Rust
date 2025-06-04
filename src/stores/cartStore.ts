@@ -359,10 +359,10 @@ export const useCartStore = create<CartState>((set, get) => ({
       alert("Person not selected.");
       return;
     }
-    console.log("prev_id", prev_id,"invoice.type",invoice.type);
+
     if (invoiceId === -1) {
       const newInvoiceNo = generateInvoiceNumber(invoice.type, prev_id);
-      console.log("in addproducttocart newinvoicenumber",newInvoiceNo)
+     
       set({
         invoice: {
           ...invoice,
