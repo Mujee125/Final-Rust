@@ -92,8 +92,11 @@ export const usePersonsStore = create<PersonsStore>((set, get) => ({
 
   addPerson: async (person) => {
     try {
-      console.log("in create person ")
-      const result = await invoke<number>("create_person", { person });
+      // Remove id and invoices_no to force insert as new
+      const newPerson = { ...person };
+      delete (newPerson as any).id;
+      delete (newPerson as any).invoices_no;
+      const result = await invoke<number>("create_person", { person: newPerson });
       if (result > 0) {
         get().fetchPersons();
         get().clearCurrentPerson();
